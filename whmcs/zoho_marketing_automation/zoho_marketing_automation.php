@@ -89,6 +89,9 @@ function zoho_marketing_automation_output($vars): void {
 	echo zmawhmcs_checkbox('sync_client_edit', 'ClientEdit', (string) $settings['sync_client_edit']);
 	echo zmawhmcs_checkbox('sync_contact_add', 'ContactAdd', (string) $settings['sync_contact_add']);
 	echo zmawhmcs_checkbox('sync_contact_edit', 'ContactEdit', (string) $settings['sync_contact_edit']);
+	echo zmawhmcs_checkbox('sync_checkout', 'Checkout Created', (string) $settings['sync_checkout']);
+	echo zmawhmcs_checkbox('sync_order_paid', 'Order Paid', (string) $settings['sync_order_paid']);
+	echo zmawhmcs_checkbox('sync_invoice_paid', 'Invoice Paid', (string) $settings['sync_invoice_paid']);
 	echo '</div>';
 	echo '<h3>Tags</h3>';
 	echo '<select name="tag_names[]" multiple size="5" class="zmawhmcs-full">';
@@ -100,7 +103,7 @@ function zoho_marketing_automation_output($vars): void {
 	echo '<h3>Field Mapping</h3>';
 	echo '<table class="zmawhmcs-table"><thead><tr><th>WHMCS Field</th><th>Zoho Lead Field</th></tr></thead><tbody>';
 	$mappings = array_values((array) $settings['mappings']);
-	for ($i = 0; $i < max(10, count($mappings) + 3); $i++) {
+	for ($i = 0; $i < max(22, count($mappings) + 3); $i++) {
 		$mapping = is_array($mappings[$i] ?? null) ? $mappings[$i] : ['whmcs_field' => '', 'zoho_field' => ''];
 		echo '<tr><td>' . zmawhmcs_mapping_select('mappings[' . $i . '][whmcs_field]', (string) ($mapping['whmcs_field'] ?? ''), FieldMapper::whmcsFieldLabels()) . '</td><td>' . zmawhmcs_mapping_select('mappings[' . $i . '][zoho_field]', (string) ($mapping['zoho_field'] ?? ''), zmawhmcs_field_options($cache['fields'])) . '</td></tr>';
 	}

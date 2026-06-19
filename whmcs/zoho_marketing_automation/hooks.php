@@ -10,14 +10,16 @@ require_once __DIR__ . '/lib/Bootstrap.php';
 use ZohoMarketingAutomationWhmcs\ApiClient;
 use ZohoMarketingAutomationWhmcs\HookHandlers;
 use ZohoMarketingAutomationWhmcs\OAuthService;
+use ZohoMarketingAutomationWhmcs\OrderDataProvider;
 use ZohoMarketingAutomationWhmcs\OptionsRepository;
 
 $zmawhmcs_boot = static function (): HookHandlers {
 	$options = new OptionsRepository();
 	$oauth = new OAuthService($options);
 	$api = new ApiClient($options, $oauth);
+	$orders = new OrderDataProvider();
 
-	return new HookHandlers($options, $api);
+	return new HookHandlers($options, $api, $orders);
 };
 
 add_hook('ClientAdd', 1, static function (array $vars) use ($zmawhmcs_boot): void {
@@ -34,4 +36,16 @@ add_hook('ContactAdd', 1, static function (array $vars) use ($zmawhmcs_boot): vo
 
 add_hook('ContactEdit', 1, static function (array $vars) use ($zmawhmcs_boot): void {
 	$zmawhmcs_boot()->syncContact($vars, 'contact_edit');
+});
+
+add_hook('AfterShoppingCartCheckout', 1, static function (array $vars) use ($zmawhmcs_boot): void {
+	$zmawhmcs_boot()->syncCheckout($vars);
+});
+
+add_hook('OrderPaid', 1, static function (array $vars) use ($zmawhmcs_boot): void {
+	$zmawhmcs_boot()->syncPaidOrder($vars);
+});
+
+add_hook('InvoicePaid', 1, static function (array $vars) use ($zmawhmcs_boot): void {
+	$zmawhmcs_boot()->syncPaidInvoice($vars);
 });

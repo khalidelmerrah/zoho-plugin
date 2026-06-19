@@ -8,10 +8,12 @@ use InvalidArgumentException;
 final class HookHandlers {
 	private OptionsRepository $options;
 	private ApiClient $api;
+	private OrderDataProvider $orders;
 
-	public function __construct(OptionsRepository $options, ApiClient $api) {
+	public function __construct(OptionsRepository $options, ApiClient $api, OrderDataProvider $orders) {
 		$this->options = $options;
 		$this->api = $api;
+		$this->orders = $orders;
 	}
 
 	/**
@@ -36,6 +38,42 @@ final class HookHandlers {
 		}
 
 		$this->syncRecord(FieldMapper::normalizeRecord($vars, $event), $event);
+	}
+
+	/**
+	 * @param array<string,mixed> $vars
+	 */
+	public function syncCheckout(array $vars): void {
+		$settings = $this->options->getSettings();
+		if (!$this->shouldSync($settings, 'checkout')) {
+			return;
+		}
+
+		$this->syncRecord($this->orders->checkoutRecord($vars), 'checkout');
+	}
+
+	/**
+	 * @param array<string,mixed> $vars
+	 */
+	public function syncPaidOrder(array $vars): void {
+		$settings = $this->options->getSettings();
+		if (!$this->shouldSync($settings, 'order_paid')) {
+			return;
+		}
+
+		$this->syncRecord($this->orders->paidOrderRecord($vars), 'order_paid');
+	}
+
+	/**
+	 * @param array<string,mixed> $vars
+	 */
+	public function syncPaidInvoice(array $vars): void {
+		$settings = $this->options->getSettings();
+		if (!$this->shouldSync($settings, 'invoice_paid')) {
+			return;
+		}
+
+		$this->syncRecord($this->orders->paidInvoiceRecord($vars), 'invoice_paid');
 	}
 
 	/**

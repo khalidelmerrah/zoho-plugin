@@ -41,17 +41,26 @@ $record = FieldMapper::normalizeRecord([
 assert_same('Ada', $record['firstname'], 'WHMCS first name should be normalized.');
 assert_same('ada@example.com', $record['email'], 'WHMCS email should be normalized.');
 assert_same('client_add', $record['source'], 'Sync source should be included.');
+assert_true(isset(FieldMapper::whmcsFieldLabels()['last_products_bought']), 'Order product fields should be available for Zoho mapping.');
+assert_true(isset(FieldMapper::whmcsFieldLabels()['total_paid']), 'Lifetime spend should be available for Zoho mapping.');
 
 $payload = FieldMapper::buildSubscribePayload('list-key', [
 	['whmcs_field' => 'email', 'zoho_field' => 'Lead Email'],
 	['whmcs_field' => 'firstname', 'zoho_field' => 'First Name'],
 	['whmcs_field' => 'companyname', 'zoho_field' => 'Company Name'],
-], $record);
+	['whmcs_field' => 'last_products_bought', 'zoho_field' => 'Last Products Bought'],
+	['whmcs_field' => 'total_paid', 'zoho_field' => 'Total Paid'],
+], array_merge($record, [
+	'last_products_bought' => 'Cloud VPS, Backup',
+	'total_paid' => '149.00',
+]));
 $lead_info = json_decode($payload['leadinfo'], true);
 assert_same('JSON', $payload['resfmt'], 'Zoho subscribe payload should request JSON.');
 assert_same('list-key', $payload['listkey'], 'Zoho subscribe payload should include list key.');
 assert_same('ada@example.com', $lead_info['Lead Email'], 'Lead Email should be mapped from WHMCS email.');
 assert_same('Ada', $lead_info['First Name'], 'First Name should be mapped from WHMCS firstname.');
+assert_same('Cloud VPS, Backup', $lead_info['Last Products Bought'], 'Order product summary should map to Zoho fields.');
+assert_same('149.00', $lead_info['Total Paid'], 'Lifetime spend should map to Zoho fields.');
 
 $exception_thrown = false;
 try {
@@ -108,11 +117,19 @@ assert_true(false === strpos($api_source, "'response' => " . '$raw'), 'API logs 
 $hooks_source = file_get_contents(__DIR__ . '/../hooks.php');
 assert_true(false !== strpos($hooks_source, "add_hook('ClientAdd'"), 'ClientAdd hook should be registered.');
 assert_true(false !== strpos($hooks_source, "add_hook('ContactAdd'"), 'ContactAdd hook should be registered.');
+assert_true(false !== strpos($hooks_source, "add_hook('AfterShoppingCartCheckout'"), 'Checkout hook should be registered.');
+assert_true(false !== strpos($hooks_source, "add_hook('OrderPaid'"), 'OrderPaid hook should be registered.');
+assert_true(false !== strpos($hooks_source, "add_hook('InvoicePaid'"), 'InvoicePaid hook should be registered.');
 
 $module_source = file_get_contents(__DIR__ . '/../zoho_marketing_automation.php');
 assert_true(false !== strpos($module_source, "function zmawhmcs_action_form"), 'Admin state-changing actions should use POST forms.');
 assert_true(false !== strpos($module_source, "'POST' !=="), 'Admin state-changing actions should reject non-POST requests.');
 assert_true(false !== strpos($module_source, 'function_exists(\'generate_token\') && hash_equals'), 'Admin token validation should fail closed if WHMCS token helper is unavailable.');
 assert_true(false === strpos($module_source, 'function zmawhmcs_action_url'), 'Admin state-changing actions should not be GET links with tokens in URLs.');
+assert_true(false !== strpos($module_source, "sync_order_paid"), 'Admin settings should expose paid order sync toggle.');
+assert_true(false !== strpos($module_source, "max(22"), 'Mapping table should have enough rows for order intelligence fields.');
+
+$bootstrap_source = file_get_contents(__DIR__ . '/../lib/Bootstrap.php');
+assert_true(false !== strpos($bootstrap_source, 'OrderDataProvider.php'), 'Order data provider should be loaded by module bootstrap.');
 
 echo "All WHMCS module tests passed." . PHP_EOL;

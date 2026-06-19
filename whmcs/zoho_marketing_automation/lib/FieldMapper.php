@@ -27,6 +27,18 @@ final class FieldMapper {
 			'contact_id' => 'WHMCS Contact ID',
 			'contactid' => 'WHMCS Contact Hook ID',
 			'source' => 'Source',
+			'last_order_id' => 'Last Order ID',
+			'last_invoice_id' => 'Last Invoice ID',
+			'last_order_total' => 'Last Order Total',
+			'last_order_currency' => 'Last Order Currency',
+			'last_payment_method' => 'Last Payment Method',
+			'last_products_bought' => 'Last Products Bought',
+			'last_services_bought' => 'Last Services Bought',
+			'last_service_ids' => 'Last Service IDs',
+			'last_order_date' => 'Last Order Date',
+			'total_paid' => 'Total Paid / Lifetime Spend',
+			'total_orders' => 'Total Orders',
+			'active_services_count' => 'Active Services Count',
 		];
 	}
 

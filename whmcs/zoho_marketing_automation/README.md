@@ -43,8 +43,28 @@ The module can sync:
 - `ClientEdit`
 - `ContactAdd`
 - `ContactEdit`
+- `AfterShoppingCartCheckout`
+- `OrderPaid`
+- `InvoicePaid`
 
 Zoho failures are logged but do not block WHMCS client/contact actions.
+
+## Order And Spend Fields
+
+The mapping table also exposes WHMCS order intelligence fields for Zoho custom fields:
+
+- Last Order ID
+- Last Invoice ID
+- Last Order Total
+- Last Order Currency
+- Last Payment Method
+- Last Products Bought
+- Last Services Bought
+- Last Service IDs
+- Last Order Date
+- Total Paid / Lifetime Spend
+- Total Orders
+- Active Services Count
 
 ## Zoho Scopes
 

@@ -41,6 +41,9 @@ final class OptionsRepository {
 			'sync_client_edit' => empty($settings['sync_client_edit']) ? '0' : '1',
 			'sync_contact_add' => empty($settings['sync_contact_add']) ? '0' : '1',
 			'sync_contact_edit' => empty($settings['sync_contact_edit']) ? '0' : '1',
+			'sync_checkout' => empty($settings['sync_checkout']) ? '0' : '1',
+			'sync_order_paid' => empty($settings['sync_order_paid']) ? '0' : '1',
+			'sync_invoice_paid' => empty($settings['sync_invoice_paid']) ? '0' : '1',
 			'mappings' => json_encode($this->sanitizeMappings((array) ($settings['mappings'] ?? []))),
 			'tag_names' => json_encode(array_values(array_filter(array_map([$this, 'sanitizeText'], (array) ($settings['tag_names'] ?? []))))),
 		];
@@ -190,6 +193,9 @@ final class OptionsRepository {
 			'sync_client_edit' => '1',
 			'sync_contact_add' => '1',
 			'sync_contact_edit' => '1',
+			'sync_checkout' => '1',
+			'sync_order_paid' => '1',
+			'sync_invoice_paid' => '1',
 			'mappings' => json_encode(FieldMapper::defaultMappings()),
 			'tag_names' => '[]',
 		];

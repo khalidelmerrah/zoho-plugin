@@ -9,4 +9,5 @@ require_once __DIR__ . '/ZohoTagParser.php';
 require_once __DIR__ . '/OptionsRepository.php';
 require_once __DIR__ . '/OAuthService.php';
 require_once __DIR__ . '/ApiClient.php';
+require_once __DIR__ . '/OrderDataProvider.php';
 require_once __DIR__ . '/HookHandlers.php';

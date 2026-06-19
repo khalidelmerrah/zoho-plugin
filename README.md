@@ -11,21 +11,50 @@ Private WordPress plugin that adds a Zoho Marketing Automation action to Element
 - Zoho Marketing Automation account
 - Zoho API Console server-based OAuth client
 
-## Zoho OAuth Setup
+## Create the Zoho OAuth App
 
-Create a server-based client in the Zoho API Console for the same data center as your Zoho account. Add this authorized redirect URI:
+1. Open the Zoho API Console for the same data center as your Zoho Marketing Automation account:
+   - US: `https://api-console.zoho.com/`
+   - EU: `https://api-console.zoho.eu/`
+   - IN: `https://api-console.zoho.in/`
+   - UK: `https://api-console.zoho.uk/`
+2. Click **Add Client** or **Get Started**.
+3. Choose **Server-based Applications**.
+4. Enter a client name, for example `Elementor Zoho Marketing Automation`.
+5. Enter your WordPress site URL as the homepage URL, for example:
 
 ```text
-http://localhost/wp-marketplace/wp-admin/admin-post.php?action=zema_oauth_callback
+https://example.com/
 ```
 
-Recommended scopes:
+6. Add the authorized redirect URI from the plugin settings page. It looks like this:
+
+```text
+https://example.com/wp-admin/admin-post.php?action=zema_oauth_callback
+```
+
+For the current test site, the redirect URI is:
+
+```text
+https://wpguardian.mooo.com/wp01/wp-admin/admin-post.php?action=zema_oauth_callback
+```
+
+7. Create the client.
+8. Copy the generated **Client ID** and **Client Secret**.
+
+The plugin requests these scopes:
 
 ```text
 ZohoMarketingAutomation.lead.READ,ZohoMarketingAutomation.lead.CREATE,ZohoMarketingAutomation.lead.UPDATE
 ```
 
-If Zoho rejects those scopes for your account, use:
+These scopes allow the plugin to:
+
+- Read mailing lists, lead fields, and lead tags.
+- Subscribe or update leads.
+- Assign selected tags after form submission.
+
+If Zoho rejects those scopes for your account, use this broader scope instead:
 
 ```text
 ZohoMarketingAutomation.lead.ALL
@@ -38,11 +67,13 @@ ZohoMarketingAutomation.lead.ALL
 3. Select your Zoho data center.
 4. Save the Client ID and Client Secret.
 5. Click **Connect Zoho** and approve access.
-6. Click **Refresh Lists & Fields** if the metadata cache is empty.
+6. Click **Refresh Lists, Fields & Tags** if the metadata cache is empty.
 7. In an Elementor Pro Form, add **Zoho Marketing Automation** under **Actions After Submit**.
-8. Select a Zoho mailing list, set the Elementor email field ID, and map any other Elementor field IDs to Zoho lead fields.
+8. Select a Zoho mailing list.
+9. Optionally select Zoho tags to apply to every submission from that form.
+10. Map Zoho lead fields to the Elementor form fields.
 
-Zoho API failures are logged in the settings page and do not block the visitor-facing Elementor success response.
+Zoho API failures are logged in the settings page and do not block the visitor-facing Elementor success response. Enable **Debug Logging** temporarily if you want to log every submission attempt and success while testing.
 
 ## Development
 

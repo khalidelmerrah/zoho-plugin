@@ -73,4 +73,10 @@ assert_same('https://marketingautomation.zoho.eu', $eu['api_base_url'], 'EU Mark
 $fallback = DataCenters::get('unknown');
 assert_same('https://accounts.zoho.com', $fallback['accounts_url'], 'Unknown data center should fall back to US accounts URL.');
 
+$settings_page_source = file_get_contents(__DIR__ . '/../includes/Admin/SettingsPage.php');
+assert_true(
+	false !== strpos($settings_page_source, 'wp_redirect($this->oauth->getAuthorizationUrl'),
+	'OAuth Connect must use wp_redirect because wp_safe_redirect blocks external Zoho hosts.'
+);
+
 echo "All tests passed." . PHP_EOL;

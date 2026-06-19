@@ -74,7 +74,7 @@ final class SettingsPage {
 			$this->redirectWithMessage('missing_credentials');
 		}
 
-		wp_safe_redirect($this->oauth->getAuthorizationUrl($this->oauth->createState()));
+		wp_redirect($this->oauth->getAuthorizationUrl($this->oauth->createState()));
 		exit;
 	}
 

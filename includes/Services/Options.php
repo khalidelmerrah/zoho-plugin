@@ -20,6 +20,7 @@ final class Options {
 			'data_center' => 'us',
 			'client_id' => '',
 			'client_secret' => '',
+			'debug_logging' => '0',
 		];
 
 		return array_merge($defaults, is_array($settings) ? $settings : []);
@@ -33,7 +34,14 @@ final class Options {
 			'data_center' => sanitize_key((string) ($settings['data_center'] ?? 'us')),
 			'client_id' => sanitize_text_field((string) ($settings['client_id'] ?? '')),
 			'client_secret' => sanitize_text_field((string) ($settings['client_secret'] ?? '')),
+			'debug_logging' => !empty($settings['debug_logging']) ? '1' : '0',
 		], false);
+	}
+
+	public function isDebugLoggingEnabled(): bool {
+		$settings = $this->getSettings();
+
+		return '1' === (string) ($settings['debug_logging'] ?? '0');
 	}
 
 	/**

@@ -63,6 +63,7 @@ final class SettingsPage {
 			'data_center' => in_array($data_center, $allowed_data_centers, true) ? $data_center : 'us',
 			'client_id' => sanitize_text_field((string) ($settings['client_id'] ?? '')),
 			'client_secret' => sanitize_text_field((string) ($settings['client_secret'] ?? '')),
+			'debug_logging' => !empty($settings['debug_logging']) ? '1' : '0',
 		];
 	}
 
@@ -168,6 +169,16 @@ final class SettingsPage {
 					<tr>
 						<th scope="row"><?php echo esc_html__('Authorized Redirect URI', 'zoho-elementor-marketing-automation'); ?></th>
 						<td><code><?php echo esc_html($this->options->getRedirectUri()); ?></code></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php echo esc_html__('Debug Logging', 'zoho-elementor-marketing-automation'); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr(Options::SETTINGS_OPTION); ?>[debug_logging]" value="1" <?php checked($settings['debug_logging'], '1'); ?>>
+								<?php echo esc_html__('Log every Zoho form submission attempt and success.', 'zoho-elementor-marketing-automation'); ?>
+							</label>
+							<p class="description"><?php echo esc_html__('Leave off for production to store only errors and connection events.', 'zoho-elementor-marketing-automation'); ?></p>
+						</td>
 					</tr>
 				</table>
 				<?php submit_button(__('Save Settings', 'zoho-elementor-marketing-automation')); ?>

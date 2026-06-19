@@ -146,5 +146,23 @@ assert_true(
 	false !== strpos($action_source, "\$settings['zema_fields_map']"),
 	'Zoho submit handling should keep fallback support for forms saved with the previous field map key.'
 );
+assert_true(
+	false !== strpos($action_source, "isDebugLoggingEnabled"),
+	'Zoho action should check the debug logging setting before writing successful submit logs.'
+);
+assert_true(
+	false !== strpos($action_source, "Zoho lead subscription succeeded after Elementor form submission."),
+	'Zoho action should log successful submit attempts when debug logging is enabled.'
+);
+
+$options_source = file_get_contents(__DIR__ . '/../includes/Services/Options.php');
+assert_true(
+	false !== strpos($options_source, "'debug_logging' => '0'"),
+	'Debug logging should default to off to avoid storing submit logs unless enabled.'
+);
+assert_true(
+	false !== strpos($options_source, 'isDebugLoggingEnabled'),
+	'Options should expose a debug logging helper.'
+);
 
 echo "All tests passed." . PHP_EOL;

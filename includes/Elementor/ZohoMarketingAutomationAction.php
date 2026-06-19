@@ -84,6 +84,14 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 			return;
 		}
 
+		if ($this->options->isDebugLoggingEnabled()) {
+			$this->logger->info('Zoho lead subscription started after Elementor form submission.', [
+				'form' => (string) $record->get_form_settings('form_name'),
+				'list_key' => $this->maskListKey($list_key),
+				'mapped_fields' => count($fields_map),
+			]);
+		}
+
 		try {
 			$fields = FieldMapper::normalizeSubmittedFields((array) $record->get('fields'));
 			$payload = [] !== $fields_map
@@ -112,6 +120,15 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 			$this->logger->error('Zoho lead subscription failed after Elementor form submission.', [
 				'form' => (string) $record->get_form_settings('form_name'),
 				'error' => $result->get_error_message(),
+			]);
+			return;
+		}
+
+		if ($this->options->isDebugLoggingEnabled()) {
+			$this->logger->info('Zoho lead subscription succeeded after Elementor form submission.', [
+				'form' => (string) $record->get_form_settings('form_name'),
+				'list_key' => $this->maskListKey($list_key),
+				'zoho_response' => $this->summarizeZohoResponse(is_array($result) ? $result : []),
 			]);
 		}
 	}
@@ -235,6 +252,25 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 		}
 
 		return 'text';
+	}
+
+	private function maskListKey(string $list_key): string {
+		if (strlen($list_key) <= 12) {
+			return '[set]';
+		}
+
+		return substr($list_key, 0, 6) . '...' . substr($list_key, -6);
+	}
+
+	/**
+	 * @param array<string,mixed> $response
+	 * @return array<string,string>
+	 */
+	private function summarizeZohoResponse(array $response): array {
+		return [
+			'code' => (string) ($response['code'] ?? ''),
+			'message' => (string) ($response['message'] ?? $response['status'] ?? ''),
+		];
 	}
 
 	/**

@@ -19,6 +19,7 @@ define('ZEMA_PLUGIN_VERSION', '0.1.0');
 
 require_once ZEMA_PLUGIN_DIR . 'includes/Support/DataCenters.php';
 require_once ZEMA_PLUGIN_DIR . 'includes/Support/FieldMapper.php';
+require_once ZEMA_PLUGIN_DIR . 'includes/Support/ZohoFieldParser.php';
 require_once ZEMA_PLUGIN_DIR . 'includes/Services/Options.php';
 require_once ZEMA_PLUGIN_DIR . 'includes/Services/Logger.php';
 require_once ZEMA_PLUGIN_DIR . 'includes/Services/OAuthService.php';

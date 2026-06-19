@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace ZohoElementorMarketingAutomation\Services;
 
+use ZohoElementorMarketingAutomation\Support\ZohoFieldParser;
+
 final class ApiClient {
 	private Options $options;
 	private OAuthService $oauth;
@@ -56,7 +58,7 @@ final class ApiClient {
 			return $response;
 		}
 
-		return $this->extractFields($response);
+		return ZohoFieldParser::parse($response);
 	}
 
 	/**
@@ -147,49 +149,4 @@ final class ApiClient {
 		return untrailingslashit($dc['api_base_url']);
 	}
 
-	/**
-	 * @param array<string,mixed> $response
-	 * @return array<int,array<string,string>>
-	 */
-	private function extractFields(array $response): array {
-		$fields = [];
-		$candidates = [
-			$response['lead_fields'] ?? null,
-			$response['fields'] ?? null,
-			$response['field_details'] ?? null,
-			$response['response']['lead_fields'] ?? null,
-			$response['response']['fields'] ?? null,
-		];
-
-		foreach ($candidates as $candidate) {
-			if (!is_array($candidate)) {
-				continue;
-			}
-
-			foreach ($candidate as $field) {
-				if (!is_array($field)) {
-					continue;
-				}
-
-				$name = (string) ($field['fieldname'] ?? $field['field_name'] ?? $field['display_name'] ?? $field['name'] ?? '');
-				if ('' === $name) {
-					continue;
-				}
-
-				$fields[] = [
-					'key' => sanitize_text_field($name),
-					'name' => sanitize_text_field($name),
-					'type' => sanitize_text_field((string) ($field['fieldtype'] ?? $field['type'] ?? '')),
-				];
-			}
-		}
-
-		if ([] === $fields) {
-			$fields[] = ['key' => 'Lead Email', 'name' => 'Lead Email', 'type' => 'Email'];
-			$fields[] = ['key' => 'First Name', 'name' => 'First Name', 'type' => 'Text'];
-			$fields[] = ['key' => 'Last Name', 'name' => 'Last Name', 'type' => 'Text'];
-		}
-
-		return $fields;
-	}
 }

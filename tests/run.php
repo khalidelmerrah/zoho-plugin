@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/Support/FieldMapper.php';
 require_once __DIR__ . '/../includes/Support/DataCenters.php';
+require_once __DIR__ . '/../includes/Support/ZohoFieldParser.php';
 
 use ZohoElementorMarketingAutomation\Support\DataCenters;
 use ZohoElementorMarketingAutomation\Support\FieldMapper;
+use ZohoElementorMarketingAutomation\Support\ZohoFieldParser;
 
 function assert_same($expected, $actual, string $message): void {
 	if ($expected !== $actual) {
@@ -100,6 +102,34 @@ assert_same('https://marketingautomation.zoho.eu', $eu['api_base_url'], 'EU Mark
 
 $fallback = DataCenters::get('unknown');
 assert_same('https://accounts.zoho.com', $fallback['accounts_url'], 'Unknown data center should fall back to US accounts URL.');
+
+$zoho_fields = ZohoFieldParser::parse([
+	'response' => [
+		'fieldnames' => [
+			'fieldname' => [
+				[
+					'DISPLAY_NAME' => 'Contact Email',
+					'FIELD_NAME' => 'contact_email',
+					'UITYPE' => 'email',
+					'TYPE' => 'standard',
+					'IS_MANDATORY' => true,
+				],
+				[
+					'DISPLAY_NAME' => 'Company Size',
+					'FIELD_NAME' => 'company_size',
+					'UITYPE' => 'picklist',
+					'TYPE' => 'custom',
+					'IS_MANDATORY' => false,
+				],
+			],
+		],
+	],
+]);
+assert_same('Lead Email', $zoho_fields[0]['key'], 'Zoho Contact Email should map to the listsubscribe Lead Email key.');
+assert_same('Lead Email', $zoho_fields[0]['name'], 'Zoho Contact Email should be labeled as Lead Email for mapping.');
+assert_same('Email', $zoho_fields[0]['type'], 'Zoho email UI type should normalize to Email.');
+assert_same('Company Size', $zoho_fields[1]['key'], 'Zoho custom fields should be keyed by display name for listsubscribe leadinfo.');
+assert_same('Picklist', $zoho_fields[1]['type'], 'Zoho custom field UI type should be preserved in a readable form.');
 
 $settings_page_source = file_get_contents(__DIR__ . '/../includes/Admin/SettingsPage.php');
 assert_true(

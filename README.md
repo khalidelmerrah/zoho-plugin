@@ -2,12 +2,25 @@
 
 Private WordPress plugin that adds a Zoho Marketing Automation action to Elementor Pro Forms. The action sends form submissions directly to Zoho through OAuth/API, with no third-party service in between.
 
-## Requirements
+## Compatibility
 
 - WordPress 6.5+
 - PHP 7.4+
-- Elementor
-- Elementor Pro with Forms
+- Elementor 4.x
+- Elementor Pro 4.x with Forms
+
+Tested stack:
+
+- WordPress 7.0
+- Elementor 4.1.3
+- Elementor Pro 4.1.1
+
+Elementor Pro is required because this plugin registers a custom Elementor Forms action using Elementor Pro's form action API.
+
+Older Elementor Pro versions may work if they support custom form actions via `elementor_pro/forms/actions/register`, but they are not part of the tested compatibility range for this plugin.
+
+## Requirements
+
 - Zoho Marketing Automation account
 - Zoho API Console server-based OAuth client
 

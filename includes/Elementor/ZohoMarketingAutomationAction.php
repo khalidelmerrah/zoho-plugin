@@ -42,6 +42,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 	public function register_settings_section($widget): void {
 		$cache = $this->options->getCache();
 		$list_options = $this->formatOptions((array) $cache['lists']);
+		$tag_options = $this->formatOptions((array) $cache['tags']);
 
 		$widget->start_controls_section(
 			'section_zema',
@@ -63,6 +64,21 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 			]
 		);
 
+		$widget->add_control(
+			'zema_tag_names',
+			[
+				'label' => esc_html__('Tags', 'zoho-elementor-marketing-automation'),
+				'type' => Controls_Manager::SELECT2,
+				'multiple' => true,
+				'label_block' => true,
+				'options' => $tag_options,
+				'description' => esc_html__('Optional. Refresh Zoho metadata in WordPress settings if tags are missing.', 'zoho-elementor-marketing-automation'),
+				'condition' => [
+					'zema_list_key!' => '',
+				],
+			]
+		);
+
 		$this->registerZohoFieldsMapControl($widget);
 
 		$widget->end_controls_section();
@@ -76,6 +92,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 		$settings = $record->get('form_settings');
 		$list_key = trim((string) ($settings['zema_list_key'] ?? ''));
 		$fields_map = $this->getSavedFieldsMap($settings);
+		$tag_names = $this->normalizeSelectedTags($settings['zema_tag_names'] ?? []);
 
 		if ('' === $list_key) {
 			$this->logger->error('Zoho Elementor action is missing a mailing list.', [
@@ -89,6 +106,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 				'form' => (string) $record->get_form_settings('form_name'),
 				'list_key' => $this->maskListKey($list_key),
 				'mapped_fields' => count($fields_map),
+				'tag_count' => count($tag_names),
 			]);
 		}
 
@@ -131,6 +149,27 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 				'zoho_response' => $this->summarizeZohoResponse(is_array($result) ? $result : []),
 			]);
 		}
+
+		$email = $this->extractLeadEmail($payload);
+		foreach ($tag_names as $tag_name) {
+			$tag_result = $this->api_client->assignLeadTag($email, $tag_name);
+			if (is_wp_error($tag_result)) {
+				$this->logger->error('Zoho lead tag assignment failed after Elementor form submission.', [
+					'form' => (string) $record->get_form_settings('form_name'),
+					'tag' => $tag_name,
+					'error' => $tag_result->get_error_message(),
+				]);
+				continue;
+			}
+
+			if ($this->options->isDebugLoggingEnabled()) {
+				$this->logger->info('Zoho lead tag assignment succeeded after Elementor form submission.', [
+					'form' => (string) $record->get_form_settings('form_name'),
+					'tag' => $tag_name,
+					'zoho_response' => $this->summarizeZohoResponse(is_array($tag_result) ? $tag_result : []),
+				]);
+			}
+		}
 	}
 
 	/**
@@ -138,7 +177,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 	 * @return array<string,mixed>
 	 */
 	public function on_export($element): array {
-		unset($element['settings']['zema_list_key'], $element['settings']['zema_email_field'], $element['settings']['zema_field_mappings'], $element['settings']['zema_fields_map'], $element['settings']['zema_fields_map_v2']);
+		unset($element['settings']['zema_list_key'], $element['settings']['zema_tag_names'], $element['settings']['zema_email_field'], $element['settings']['zema_field_mappings'], $element['settings']['zema_fields_map'], $element['settings']['zema_fields_map_v2']);
 
 		return $element;
 	}
@@ -271,6 +310,39 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 			'code' => (string) ($response['code'] ?? ''),
 			'message' => (string) ($response['message'] ?? $response['status'] ?? ''),
 		];
+	}
+
+	/**
+	 * @param mixed $selected
+	 * @return array<int,string>
+	 */
+	private function normalizeSelectedTags($selected): array {
+		if (is_string($selected)) {
+			$selected = '' === $selected ? [] : [$selected];
+		}
+
+		if (!is_array($selected)) {
+			return [];
+		}
+
+		$tags = [];
+		foreach ($selected as $tag_name) {
+			$tag_name = trim((string) $tag_name);
+			if ('' !== $tag_name) {
+				$tags[] = $tag_name;
+			}
+		}
+
+		return array_values(array_unique($tags));
+	}
+
+	/**
+	 * @param array<string,string> $payload
+	 */
+	private function extractLeadEmail(array $payload): string {
+		$lead_info = json_decode((string) ($payload['leadinfo'] ?? ''), true);
+
+		return is_array($lead_info) ? (string) ($lead_info['Lead Email'] ?? '') : '';
 	}
 
 	/**

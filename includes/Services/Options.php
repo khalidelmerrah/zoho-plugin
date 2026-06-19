@@ -81,6 +81,7 @@ final class Options {
 		$defaults = [
 			'lists' => [],
 			'fields' => [],
+			'tags' => [],
 			'updated_at' => 0,
 		];
 
@@ -90,11 +91,13 @@ final class Options {
 	/**
 	 * @param array<int,array<string,string>> $lists
 	 * @param array<int,array<string,string>> $fields
+	 * @param array<int,array<string,string>> $tags
 	 */
-	public function updateCache(array $lists, array $fields): void {
+	public function updateCache(array $lists, array $fields, array $tags = []): void {
 		update_option(self::CACHE_OPTION, [
 			'lists' => $lists,
 			'fields' => $fields,
+			'tags' => $tags,
 			'updated_at' => time(),
 		], false);
 	}

@@ -4,10 +4,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/Support/FieldMapper.php';
 require_once __DIR__ . '/../includes/Support/DataCenters.php';
 require_once __DIR__ . '/../includes/Support/ZohoFieldParser.php';
+require_once __DIR__ . '/../includes/Support/ZohoTagParser.php';
 
 use ZohoElementorMarketingAutomation\Support\DataCenters;
 use ZohoElementorMarketingAutomation\Support\FieldMapper;
 use ZohoElementorMarketingAutomation\Support\ZohoFieldParser;
+use ZohoElementorMarketingAutomation\Support\ZohoTagParser;
 
 function assert_same($expected, $actual, string $message): void {
 	if ($expected !== $actual) {
@@ -131,10 +133,36 @@ assert_same('Email', $zoho_fields[0]['type'], 'Zoho email UI type should normali
 assert_same('Company Size', $zoho_fields[1]['key'], 'Zoho custom fields should be keyed by display name for listsubscribe leadinfo.');
 assert_same('Picklist', $zoho_fields[1]['type'], 'Zoho custom field UI type should be preserved in a readable form.');
 
+$zoho_tags = ZohoTagParser::parse([
+	'tags' => [
+		[
+			'16492000023685218' => [
+				'tag_name' => 'webinar',
+				'tag_color' => '#48b9d1',
+				'tag_desc' => 'Webinar leads',
+			],
+		],
+		[
+			'16492000023685001' => [
+				'tag_name' => 'OneCloud',
+				'tag_color' => '#ff458a',
+			],
+		],
+	],
+]);
+assert_same('webinar', $zoho_tags[0]['key'], 'Zoho tag parser should use tag_name as the selectable value.');
+assert_same('webinar', $zoho_tags[0]['name'], 'Zoho tag parser should use tag_name as the label.');
+assert_same('#48b9d1', $zoho_tags[0]['color'], 'Zoho tag parser should preserve tag color when present.');
+assert_same('OneCloud', $zoho_tags[1]['key'], 'Zoho tag parser should parse multiple documented tag rows.');
+
 $settings_page_source = file_get_contents(__DIR__ . '/../includes/Admin/SettingsPage.php');
 assert_true(
 	false !== strpos($settings_page_source, 'wp_redirect($this->oauth->getAuthorizationUrl'),
 	'OAuth Connect must use wp_redirect because wp_safe_redirect blocks external Zoho hosts.'
+);
+assert_true(
+	false !== strpos($settings_page_source, 'Refresh Lists, Fields & Tags'),
+	'Admin refresh action should clearly include tags.'
 );
 
 $action_source = file_get_contents(__DIR__ . '/../includes/Elementor/ZohoMarketingAutomationAction.php');
@@ -154,6 +182,14 @@ assert_true(
 	false !== strpos($action_source, "Zoho lead subscription succeeded after Elementor form submission."),
 	'Zoho action should log successful submit attempts when debug logging is enabled.'
 );
+assert_true(
+	false !== strpos($action_source, "'zema_tag_names'"),
+	'Zoho action should expose a tag multi-select control.'
+);
+assert_true(
+	false !== strpos($action_source, 'assignLeadTag'),
+	'Zoho action should assign selected tags after a successful lead subscription.'
+);
 
 $options_source = file_get_contents(__DIR__ . '/../includes/Services/Options.php');
 assert_true(
@@ -163,6 +199,10 @@ assert_true(
 assert_true(
 	false !== strpos($options_source, 'isDebugLoggingEnabled'),
 	'Options should expose a debug logging helper.'
+);
+assert_true(
+	false !== strpos($options_source, "'tags' => []"),
+	'Metadata cache should include tags.'
 );
 
 echo "All tests passed." . PHP_EOL;

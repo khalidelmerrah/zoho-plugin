@@ -1,0 +1,232 @@
+.zema-admin {
+	color: #17202a;
+	max-width: 1180px;
+}
+
+.zema-hero {
+	align-items: stretch;
+	background: linear-gradient(135deg, #0f5132 0%, #146c43 46%, #1f7a8c 100%);
+	border-radius: 6px;
+	color: #fff;
+	display: flex;
+	justify-content: space-between;
+	margin: 20px 0;
+	overflow: hidden;
+	padding: 28px 32px;
+}
+
+.zema-hero h1 {
+	color: #fff;
+	font-size: 30px;
+	font-weight: 650;
+	line-height: 1.15;
+	margin: 0 0 8px;
+}
+
+.zema-hero p {
+	color: rgba(255, 255, 255, 0.84);
+	font-size: 14px;
+	margin: 0;
+	max-width: 680px;
+}
+
+.zema-kicker {
+	font-size: 11px !important;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	margin-bottom: 10px !important;
+	text-transform: uppercase;
+}
+
+.zema-status-card {
+	align-self: center;
+	background: rgba(255, 255, 255, 0.14);
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	border-radius: 6px;
+	min-width: 170px;
+	padding: 16px;
+}
+
+.zema-status-card span {
+	display: block;
+	font-size: 12px;
+	opacity: 0.76;
+}
+
+.zema-status-card strong {
+	display: block;
+	font-size: 20px;
+	margin-top: 4px;
+}
+
+.zema-grid {
+	display: grid;
+	gap: 20px;
+	grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.8fr);
+}
+
+.zema-panel {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	margin: 0 0 20px;
+	padding: 22px;
+}
+
+.zema-panel-heading {
+	border-bottom: 1px solid #eef0f2;
+	margin: -2px 0 18px;
+	padding-bottom: 16px;
+}
+
+.zema-panel-heading h2 {
+	font-size: 18px;
+	margin: 0 0 5px;
+}
+
+.zema-panel-heading p,
+.zema-token-note {
+	color: #5f6b76;
+	margin: 0;
+}
+
+.zema-heading-row {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.zema-form-grid {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	margin-bottom: 18px;
+}
+
+.zema-form-grid label,
+.zema-field-full {
+	display: grid;
+	gap: 7px;
+}
+
+.zema-form-grid span,
+.zema-field-full span {
+	font-weight: 600;
+}
+
+.zema-form-grid input[type="text"],
+.zema-form-grid input[type="password"],
+.zema-form-grid select {
+	border-radius: 4px;
+	max-width: 100%;
+	min-height: 38px;
+	width: 100%;
+}
+
+.zema-field-full {
+	grid-column: 1 / -1;
+}
+
+.zema-field-full code {
+	background: #f4f6f8;
+	border: 1px solid #dfe3e7;
+	border-radius: 4px;
+	display: block;
+	padding: 10px 12px;
+	white-space: normal;
+}
+
+.zema-toggle {
+	align-items: flex-start;
+	background: #f8fafb;
+	border: 1px solid #e0e4e8;
+	border-radius: 6px;
+	display: flex !important;
+	gap: 12px !important;
+	padding: 14px;
+}
+
+.zema-toggle input {
+	margin-top: 3px;
+}
+
+.zema-toggle em {
+	color: #66717d;
+	display: block;
+	font-style: normal;
+	font-weight: 400;
+	margin-top: 3px;
+}
+
+.zema-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.zema-actions .button {
+	justify-content: center;
+	text-align: center;
+}
+
+.zema-metrics {
+	display: grid;
+	gap: 14px;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.zema-metrics div {
+	background: #f6f8fa;
+	border: 1px solid #e1e6ea;
+	border-radius: 6px;
+	padding: 16px;
+}
+
+.zema-metrics strong {
+	display: block;
+	font-size: 26px;
+	line-height: 1;
+	margin-bottom: 7px;
+}
+
+.zema-metrics span {
+	color: #5f6b76;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.zema-log-table code {
+	white-space: normal;
+	word-break: break-word;
+}
+
+.zema-log-level {
+	background: #eaf4ff;
+	border-radius: 999px;
+	color: #0b5cab;
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 3px 8px;
+	text-transform: uppercase;
+}
+
+@media (max-width: 960px) {
+	.zema-hero,
+	.zema-grid,
+	.zema-form-grid,
+	.zema-metrics {
+		display: block;
+	}
+
+	.zema-status-card,
+	.zema-form-grid label,
+	.zema-field-full,
+	.zema-metrics div {
+		margin-top: 14px;
+	}
+}

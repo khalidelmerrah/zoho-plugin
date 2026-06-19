@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace ZohoElementorMarketingAutomation\Services;
 
 use ZohoElementorMarketingAutomation\Support\ZohoFieldParser;
+use ZohoElementorMarketingAutomation\Support\ZohoTagParser;
 
 final class ApiClient {
 	private Options $options;
@@ -62,11 +63,38 @@ final class ApiClient {
 	}
 
 	/**
+	 * @return array<int,array<string,string>>|\WP_Error
+	 */
+	public function getLeadTags() {
+		$response = $this->request('GET', '/api/v1/tag/getalltags');
+
+		if (is_wp_error($response)) {
+			if ('zema_api_error' === $response->get_error_code() && false !== stripos($response->get_error_message(), 'No tags')) {
+				return [];
+			}
+
+			return $response;
+		}
+
+		return ZohoTagParser::parse($response);
+	}
+
+	/**
 	 * @param array<string,string> $payload
 	 * @return array<string,mixed>|\WP_Error
 	 */
 	public function subscribeLead(array $payload) {
 		return $this->request('POST', '/api/v1/json/listsubscribe', $payload);
+	}
+
+	/**
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function assignLeadTag(string $email, string $tag_name) {
+		return $this->request('POST', '/api/v1/tag/associate', [
+			'lead_email' => $email,
+			'tagName' => $tag_name,
+		]);
 	}
 
 	/**
@@ -83,7 +111,12 @@ final class ApiClient {
 			return $fields;
 		}
 
-		$this->options->updateCache($lists, $fields);
+		$tags = $this->getLeadTags();
+		if (is_wp_error($tags)) {
+			return $tags;
+		}
+
+		$this->options->updateCache($lists, $fields, $tags);
 
 		return true;
 	}

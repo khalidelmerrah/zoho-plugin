@@ -137,4 +137,14 @@ assert_true(
 	'OAuth Connect must use wp_redirect because wp_safe_redirect blocks external Zoho hosts.'
 );
 
+$action_source = file_get_contents(__DIR__ . '/../includes/Elementor/ZohoMarketingAutomationAction.php');
+assert_true(
+	false !== strpos($action_source, "add_control('zema_fields_map_v2'"),
+	'Zoho mapping control should use a v2 setting key so existing forms do not keep the old 3-field map.'
+);
+assert_true(
+	false !== strpos($action_source, "\$settings['zema_fields_map']"),
+	'Zoho submit handling should keep fallback support for forms saved with the previous field map key.'
+);
+
 echo "All tests passed." . PHP_EOL;

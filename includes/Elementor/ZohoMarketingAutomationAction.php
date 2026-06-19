@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace ZohoElementorMarketingAutomation\Elementor;
 
 use Elementor\Controls_Manager;
+use Elementor\Repeater;
 use ElementorPro\Modules\Forms\Classes\Integration_Base;
+use ElementorPro\Modules\Forms\Controls\Fields_Map;
 use InvalidArgumentException;
 use ZohoElementorMarketingAutomation\Services\ApiClient;
 use ZohoElementorMarketingAutomation\Services\Logger;
@@ -61,7 +63,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 			]
 		);
 
-		$this->register_fields_map_control($widget);
+		$this->registerZohoFieldsMapControl($widget);
 
 		$widget->end_controls_section();
 	}
@@ -73,7 +75,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 	public function run($record, $ajax_handler): void {
 		$settings = $record->get('form_settings');
 		$list_key = trim((string) ($settings['zema_list_key'] ?? ''));
-		$fields_map = is_array($settings['zema_fields_map'] ?? null) ? $settings['zema_fields_map'] : [];
+		$fields_map = $this->getSavedFieldsMap($settings);
 
 		if ('' === $list_key) {
 			$this->logger->error('Zoho Elementor action is missing a mailing list.', [
@@ -119,19 +121,29 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 	 * @return array<string,mixed>
 	 */
 	public function on_export($element): array {
-		unset($element['settings']['zema_list_key'], $element['settings']['zema_email_field'], $element['settings']['zema_field_mappings'], $element['settings']['zema_fields_map']);
+		unset($element['settings']['zema_list_key'], $element['settings']['zema_email_field'], $element['settings']['zema_field_mappings'], $element['settings']['zema_fields_map'], $element['settings']['zema_fields_map_v2']);
 
 		return $element;
 	}
 
-	protected function get_fields_map_control_options() {
-		return [
+	/**
+	 * @param \ElementorPro\Modules\Forms\Widgets\Form $widget
+	 */
+	private function registerZohoFieldsMapControl($widget): void {
+		$repeater = new Repeater();
+		$repeater->add_control('remote_id', ['type' => Controls_Manager::HIDDEN]);
+		$repeater->add_control('local_id', ['type' => Controls_Manager::SELECT]);
+
+		$widget->add_control('zema_fields_map_v2', [
 			'label' => esc_html__('Field Mappings', 'zoho-elementor-marketing-automation'),
+			'type' => Fields_Map::CONTROL_TYPE,
+			'separator' => 'before',
+			'fields' => $repeater->get_controls(),
 			'default' => $this->getZohoFieldMapDefaults(),
 			'condition' => [
 				'zema_list_key!' => '',
 			],
-		];
+		]);
 	}
 
 	/**
@@ -223,6 +235,22 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 		}
 
 		return 'text';
+	}
+
+	/**
+	 * @param array<string,mixed> $settings
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function getSavedFieldsMap(array $settings): array {
+		if (is_array($settings['zema_fields_map_v2'] ?? null)) {
+			return $settings['zema_fields_map_v2'];
+		}
+
+		if (is_array($settings['zema_fields_map'] ?? null)) {
+			return $settings['zema_fields_map'];
+		}
+
+		return [];
 	}
 
 	/**

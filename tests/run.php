@@ -66,6 +66,34 @@ try {
 }
 assert_true($exception_thrown, 'Missing email mapping should throw InvalidArgumentException.');
 
+$fields_map_payload = FieldMapper::buildSubscribePayloadFromFieldsMap(
+	'list-456',
+	[
+		['remote_id' => 'Lead Email', 'local_id' => 'email'],
+		['remote_id' => 'First Name', 'local_id' => 'name'],
+		['remote_id' => 'Interests', 'local_id' => 'interests'],
+	],
+	$normalized
+);
+$fields_map_lead_info = json_decode($fields_map_payload['leadinfo'], true);
+assert_same('list-456', $fields_map_payload['listkey'], 'Fields map payload should include the selected list key.');
+assert_same('lead@example.com', $fields_map_lead_info['Lead Email'], 'Fields map should use the mapped Lead Email local field.');
+assert_same('Ada Lovelace', $fields_map_lead_info['First Name'], 'Fields map should map local form fields to Zoho fields.');
+assert_same('Cloud, Security', $fields_map_lead_info['Interests'], 'Fields map should preserve multi-value mapped fields.');
+
+$fields_map_exception_thrown = false;
+try {
+	FieldMapper::buildSubscribePayloadFromFieldsMap(
+		'list-456',
+		[['remote_id' => 'First Name', 'local_id' => 'name']],
+		$normalized
+	);
+} catch (InvalidArgumentException $exception) {
+	$fields_map_exception_thrown = true;
+	assert_same('Zoho Marketing Automation requires Lead Email to be mapped to a form field.', $exception->getMessage(), 'Fields map missing email should have a clear failure message.');
+}
+assert_true($fields_map_exception_thrown, 'Fields map without Lead Email should throw InvalidArgumentException.');
+
 $eu = DataCenters::get('eu');
 assert_same('https://accounts.zoho.eu', $eu['accounts_url'], 'EU accounts URL should be available.');
 assert_same('https://marketingautomation.zoho.eu', $eu['api_base_url'], 'EU Marketing Automation API URL should be available.');

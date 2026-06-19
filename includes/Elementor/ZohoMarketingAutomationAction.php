@@ -4,8 +4,7 @@ declare(strict_types=1);
 namespace ZohoElementorMarketingAutomation\Elementor;
 
 use Elementor\Controls_Manager;
-use Elementor\Repeater;
-use ElementorPro\Modules\Forms\Classes\Action_Base;
+use ElementorPro\Modules\Forms\Classes\Integration_Base;
 use InvalidArgumentException;
 use ZohoElementorMarketingAutomation\Services\ApiClient;
 use ZohoElementorMarketingAutomation\Services\Logger;
@@ -16,7 +15,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-final class ZohoMarketingAutomationAction extends Action_Base {
+final class ZohoMarketingAutomationAction extends Integration_Base {
 	private Options $options;
 	private ApiClient $api_client;
 	private Logger $logger;
@@ -41,7 +40,6 @@ final class ZohoMarketingAutomationAction extends Action_Base {
 	public function register_settings_section($widget): void {
 		$cache = $this->options->getCache();
 		$list_options = $this->formatOptions((array) $cache['lists']);
-		$field_options = $this->formatOptions((array) $cache['fields']);
 
 		$widget->start_controls_section(
 			'section_zema',
@@ -63,43 +61,7 @@ final class ZohoMarketingAutomationAction extends Action_Base {
 			]
 		);
 
-		$widget->add_control(
-			'zema_email_field',
-			[
-				'label' => esc_html__('Email Field ID', 'zoho-elementor-marketing-automation'),
-				'type' => Controls_Manager::TEXT,
-				'placeholder' => 'email',
-				'description' => esc_html__('Enter the Elementor form field ID that contains the subscriber email.', 'zoho-elementor-marketing-automation'),
-			]
-		);
-
-		$repeater = new Repeater();
-		$repeater->add_control(
-			'elementor_field',
-			[
-				'label' => esc_html__('Elementor Field ID', 'zoho-elementor-marketing-automation'),
-				'type' => Controls_Manager::TEXT,
-				'placeholder' => 'first_name',
-			]
-		);
-		$repeater->add_control(
-			'zoho_field',
-			[
-				'label' => esc_html__('Zoho Lead Field', 'zoho-elementor-marketing-automation'),
-				'type' => Controls_Manager::SELECT,
-				'options' => $field_options,
-			]
-		);
-
-		$widget->add_control(
-			'zema_field_mappings',
-			[
-				'label' => esc_html__('Field Mappings', 'zoho-elementor-marketing-automation'),
-				'type' => Controls_Manager::REPEATER,
-				'fields' => $repeater->get_controls(),
-				'title_field' => '{{{ elementor_field }}} -> {{{ zoho_field }}}',
-			]
-		);
+		$this->register_fields_map_control($widget);
 
 		$widget->end_controls_section();
 	}
@@ -111,11 +73,10 @@ final class ZohoMarketingAutomationAction extends Action_Base {
 	public function run($record, $ajax_handler): void {
 		$settings = $record->get('form_settings');
 		$list_key = trim((string) ($settings['zema_list_key'] ?? ''));
-		$email_field = trim((string) ($settings['zema_email_field'] ?? ''));
-		$mappings = is_array($settings['zema_field_mappings'] ?? null) ? $settings['zema_field_mappings'] : [];
+		$fields_map = is_array($settings['zema_fields_map'] ?? null) ? $settings['zema_fields_map'] : [];
 
-		if ('' === $list_key || '' === $email_field) {
-			$this->logger->error('Zoho Elementor action is missing a list or email field mapping.', [
+		if ('' === $list_key) {
+			$this->logger->error('Zoho Elementor action is missing a mailing list.', [
 				'form' => (string) $record->get_form_settings('form_name'),
 			]);
 			return;
@@ -123,13 +84,20 @@ final class ZohoMarketingAutomationAction extends Action_Base {
 
 		try {
 			$fields = FieldMapper::normalizeSubmittedFields((array) $record->get('fields'));
-			$payload = FieldMapper::buildSubscribePayload(
-				$list_key,
-				$email_field,
-				$this->normalizeMappings($mappings),
-				$fields,
-				'Elementor Form: ' . (string) $record->get_form_settings('form_name')
-			);
+			$payload = [] !== $fields_map
+				? FieldMapper::buildSubscribePayloadFromFieldsMap(
+					$list_key,
+					$this->normalizeFieldsMap($fields_map),
+					$fields,
+					'Elementor Form: ' . (string) $record->get_form_settings('form_name')
+				)
+				: FieldMapper::buildSubscribePayload(
+					$list_key,
+					trim((string) ($settings['zema_email_field'] ?? '')),
+					$this->normalizeLegacyMappings(is_array($settings['zema_field_mappings'] ?? null) ? $settings['zema_field_mappings'] : []),
+					$fields,
+					'Elementor Form: ' . (string) $record->get_form_settings('form_name')
+				);
 		} catch (InvalidArgumentException $exception) {
 			$this->logger->error($exception->getMessage(), [
 				'form' => (string) $record->get_form_settings('form_name'),
@@ -151,9 +119,19 @@ final class ZohoMarketingAutomationAction extends Action_Base {
 	 * @return array<string,mixed>
 	 */
 	public function on_export($element): array {
-		unset($element['settings']['zema_list_key'], $element['settings']['zema_email_field'], $element['settings']['zema_field_mappings']);
+		unset($element['settings']['zema_list_key'], $element['settings']['zema_email_field'], $element['settings']['zema_field_mappings'], $element['settings']['zema_fields_map']);
 
 		return $element;
+	}
+
+	protected function get_fields_map_control_options() {
+		return [
+			'label' => esc_html__('Field Mappings', 'zoho-elementor-marketing-automation'),
+			'default' => $this->getZohoFieldMapDefaults(),
+			'condition' => [
+				'zema_list_key!' => '',
+			],
+		];
 	}
 
 	/**
@@ -184,7 +162,95 @@ final class ZohoMarketingAutomationAction extends Action_Base {
 	 * @param array<int,array<string,mixed>> $mappings
 	 * @return array<int,array<string,string>>
 	 */
-	private function normalizeMappings(array $mappings): array {
+	private function getZohoFieldMapDefaults(): array {
+		$cache = $this->options->getCache();
+		$fields = (array) $cache['fields'];
+		$defaults = [];
+		$has_email = false;
+
+		foreach ($fields as $field) {
+			if (!is_array($field)) {
+				continue;
+			}
+
+			$key = (string) ($field['key'] ?? '');
+			if ('' === $key) {
+				continue;
+			}
+
+			$defaults[] = [
+				'remote_id' => $key,
+				'remote_label' => (string) ($field['name'] ?? $key),
+				'remote_type' => $this->normalizeRemoteFieldType((string) ($field['type'] ?? 'text')),
+				'remote_required' => 'Lead Email' === $key,
+			];
+
+			if ('Lead Email' === $key) {
+				$has_email = true;
+			}
+		}
+
+		if (!$has_email) {
+			array_unshift($defaults, [
+				'remote_id' => 'Lead Email',
+				'remote_label' => esc_html__('Lead Email', 'zoho-elementor-marketing-automation'),
+				'remote_type' => 'email',
+				'remote_required' => true,
+			]);
+		}
+
+		if (1 === count($defaults)) {
+			$defaults[] = [
+				'remote_id' => 'First Name',
+				'remote_label' => esc_html__('First Name', 'zoho-elementor-marketing-automation'),
+				'remote_type' => 'text',
+			];
+			$defaults[] = [
+				'remote_id' => 'Last Name',
+				'remote_label' => esc_html__('Last Name', 'zoho-elementor-marketing-automation'),
+				'remote_type' => 'text',
+			];
+		}
+
+		return $defaults;
+	}
+
+	private function normalizeRemoteFieldType(string $type): string {
+		$type = strtolower($type);
+
+		if (in_array($type, ['email', 'number', 'date', 'time', 'tel', 'url'], true)) {
+			return $type;
+		}
+
+		return 'text';
+	}
+
+	/**
+	 * @param array<int,array<string,mixed>> $fields_map
+	 * @return array<int,array<string,string>>
+	 */
+	private function normalizeFieldsMap(array $fields_map): array {
+		$normalized = [];
+
+		foreach ($fields_map as $map_item) {
+			if (!is_array($map_item)) {
+				continue;
+			}
+
+			$normalized[] = [
+				'remote_id' => (string) ($map_item['remote_id'] ?? ''),
+				'local_id' => (string) ($map_item['local_id'] ?? ''),
+			];
+		}
+
+		return $normalized;
+	}
+
+	/**
+	 * @param array<int,array<string,mixed>> $mappings
+	 * @return array<int,array<string,string>>
+	 */
+	private function normalizeLegacyMappings(array $mappings): array {
 		$normalized = [];
 
 		foreach ($mappings as $mapping) {

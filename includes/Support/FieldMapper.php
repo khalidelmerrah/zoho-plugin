@@ -71,4 +71,44 @@ final class FieldMapper {
 			'sources' => $source,
 		];
 	}
+
+	/**
+	 * @param array<int,array<string,string>> $fields_map
+	 * @param array<string,string> $submitted_fields
+	 * @return array<string,string>
+	 */
+	public static function buildSubscribePayloadFromFieldsMap(
+		string $list_key,
+		array $fields_map,
+		array $submitted_fields,
+		string $source = 'Elementor Form'
+	): array {
+		$email_field = '';
+		$mappings = [];
+
+		foreach ($fields_map as $map_item) {
+			$zoho_field = trim((string) ($map_item['remote_id'] ?? ''));
+			$elementor_field = trim((string) ($map_item['local_id'] ?? ''));
+
+			if ('' === $zoho_field || '' === $elementor_field) {
+				continue;
+			}
+
+			if ('Lead Email' === $zoho_field) {
+				$email_field = $elementor_field;
+				continue;
+			}
+
+			$mappings[] = [
+				'elementor_field' => $elementor_field,
+				'zoho_field' => $zoho_field,
+			];
+		}
+
+		if ('' === $email_field) {
+			throw new InvalidArgumentException('Zoho Marketing Automation requires Lead Email to be mapped to a form field.');
+		}
+
+		return self::buildSubscribePayload($list_key, $email_field, $mappings, $submitted_fields, $source);
+	}
 }

@@ -7,7 +7,6 @@
  * Text Domain: zoho-elementor-marketing-automation
  * Requires at least: 6.5
  * Requires PHP: 7.4
- * Requires Plugins: elementor, elementor-pro
  */
 
 if (!defined('ABSPATH')) {

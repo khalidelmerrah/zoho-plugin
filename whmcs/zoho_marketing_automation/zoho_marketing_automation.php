@@ -114,12 +114,10 @@ function zoho_marketing_automation_output($vars): void {
 	if (!empty($tokens['expires_at'])) {
 		echo '<p class="zmawhmcs-muted">Access token expires at ' . zmawhmcs_h(date('Y-m-d H:i:s', (int) $tokens['expires_at'])) . '. Refresh token is saved for automatic renewal.</p>';
 	}
-	echo '<p><a class="btn btn-primary" href="' . zmawhmcs_h(zmawhmcs_action_url('connect')) . '">Connect Zoho</a> ';
-	echo '<a class="btn btn-default" href="' . zmawhmcs_h(zmawhmcs_action_url('refresh')) . '">Refresh Lists, Fields & Tags</a> ';
-	echo '<a class="btn btn-danger" href="' . zmawhmcs_h(zmawhmcs_action_url('disconnect')) . '">Disconnect</a></p>';
+	echo '<div class="zmawhmcs-actions">' . zmawhmcs_action_form('connect', 'Connect Zoho', 'btn btn-primary') . zmawhmcs_action_form('refresh', 'Refresh Lists, Fields & Tags', 'btn btn-default') . zmawhmcs_action_form('disconnect', 'Disconnect', 'btn btn-danger') . '</div>';
 	echo '</section>';
 	echo '<section class="zmawhmcs-panel"><h2>Cached Metadata</h2><p>Lists: ' . count($cache['lists']) . '. Fields: ' . count($cache['fields']) . '. Tags: ' . count($cache['tags']) . '.</p><p class="zmawhmcs-muted">Last refresh: ' . ((int) $cache['updated_at'] > 0 ? zmawhmcs_h(date('Y-m-d H:i:s', (int) $cache['updated_at'])) : 'Never') . '.</p></section>';
-	echo '<section class="zmawhmcs-panel"><h2>Recent Logs</h2><p><a class="btn btn-default" href="' . zmawhmcs_h(zmawhmcs_action_url('clear_logs')) . '">Clear Logs</a></p>';
+	echo '<section class="zmawhmcs-panel"><h2>Recent Logs</h2>' . zmawhmcs_action_form('clear_logs', 'Clear Logs', 'btn btn-default');
 	if (empty($logs)) {
 		echo '<p class="zmawhmcs-muted">No logs yet.</p>';
 	} else {
@@ -179,7 +177,11 @@ function zmawhmcs_handle_action(OptionsRepository $options, OAuthService $oauth,
 		return ['type' => 'success', 'message' => 'Settings saved.'];
 	}
 
-	if ('oauth_callback' !== $action && !zmawhmcs_valid_admin_token((string) ($_REQUEST['token'] ?? ''))) {
+	if ('oauth_callback' !== $action && 'POST' !== ($_SERVER['REQUEST_METHOD'] ?? '')) {
+		return ['type' => 'error', 'message' => 'Invalid request method. Please retry from the module page.'];
+	}
+
+	if ('oauth_callback' !== $action && !zmawhmcs_valid_admin_token((string) ($_POST['token'] ?? ''))) {
 		return ['type' => 'error', 'message' => 'Invalid admin token. Please retry.'];
 	}
 
@@ -225,15 +227,16 @@ function zmawhmcs_h(string $value): string {
 	return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
-function zmawhmcs_action_url(string $action): string {
-	return Module::adminUrl([
-		'action' => $action,
-		'token' => function_exists('generate_token') ? generate_token('plain') : '',
-	]);
+function zmawhmcs_action_form(string $action, string $label, string $class): string {
+	return '<form method="post" action="' . zmawhmcs_h(Module::adminUrl()) . '" class="zmawhmcs-inline-form">'
+		. '<input type="hidden" name="action" value="' . zmawhmcs_h($action) . '">'
+		. '<input type="hidden" name="token" value="' . zmawhmcs_h(function_exists('generate_token') ? generate_token('plain') : '') . '">'
+		. '<button type="submit" class="' . zmawhmcs_h($class) . '">' . zmawhmcs_h($label) . '</button>'
+		. '</form>';
 }
 
 function zmawhmcs_valid_admin_token(string $token): bool {
-	return !function_exists('generate_token') || hash_equals(generate_token('plain'), $token);
+	return function_exists('generate_token') && hash_equals(generate_token('plain'), $token);
 }
 
 function zmawhmcs_input(string $name, string $label, string $value, string $type = 'text'): string {
@@ -286,5 +289,5 @@ function zmawhmcs_field_options(array $fields): array {
 }
 
 function zmawhmcs_css(): string {
-	return '.zmawhmcs{max-width:1280px}.zmawhmcs-header{background:#123524;color:#fff;padding:28px 32px;border-radius:6px;margin:0 0 24px;display:flex;justify-content:space-between;gap:24px;align-items:center}.zmawhmcs-header p{margin:0 0 8px;text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:700}.zmawhmcs-header h1{margin:0 0 8px;color:#fff}.zmawhmcs-status{border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:14px 18px;font-weight:700}.zmawhmcs-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px}.zmawhmcs-panel{background:#fff;border:1px solid #d9dee3;border-radius:6px;padding:24px;margin-bottom:18px}.zmawhmcs-panel h2{margin-top:0}.zmawhmcs-muted{color:#56616d}.zmawhmcs-code{display:block;background:#f4f6f8;padding:10px;border-radius:4px;margin:8px 0 20px}.zmawhmcs-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.zmawhmcs label span{display:block;font-weight:700;margin-bottom:6px}.zmawhmcs input[type=text],.zmawhmcs input[type=password],.zmawhmcs select{width:100%;max-width:100%;min-height:34px}.zmawhmcs-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.zmawhmcs-full{width:100%}.zmawhmcs-table{width:100%;border-collapse:collapse;margin-bottom:18px}.zmawhmcs-table th,.zmawhmcs-table td{border:1px solid #d9dee3;padding:8px;text-align:left}.zmawhmcs-notice{padding:12px 16px;border-radius:4px;margin:0 0 18px}.zmawhmcs-notice-success{background:#e9f7ef;border-left:4px solid #1f8a4c}.zmawhmcs-notice-error{background:#fff0f0;border-left:4px solid #b42318}.zmawhmcs-log{border-top:1px solid #e5e7eb;padding:10px 0}.zmawhmcs-log-error strong{color:#b42318}.zmawhmcs-log pre{white-space:pre-wrap;background:#f7f7f7;padding:8px;margin:8px 0 0;max-height:110px;overflow:auto}@media(max-width:1100px){.zmawhmcs-grid{grid-template-columns:1fr}.zmawhmcs-form-grid,.zmawhmcs-checks{grid-template-columns:1fr}}';
+	return '.zmawhmcs{max-width:1280px}.zmawhmcs-header{background:#123524;color:#fff;padding:28px 32px;border-radius:6px;margin:0 0 24px;display:flex;justify-content:space-between;gap:24px;align-items:center}.zmawhmcs-header p{margin:0 0 8px;text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:700}.zmawhmcs-header h1{margin:0 0 8px;color:#fff}.zmawhmcs-status{border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:14px 18px;font-weight:700}.zmawhmcs-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px}.zmawhmcs-panel{background:#fff;border:1px solid #d9dee3;border-radius:6px;padding:24px;margin-bottom:18px}.zmawhmcs-panel h2{margin-top:0}.zmawhmcs-muted{color:#56616d}.zmawhmcs-code{display:block;background:#f4f6f8;padding:10px;border-radius:4px;margin:8px 0 20px}.zmawhmcs-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.zmawhmcs label span{display:block;font-weight:700;margin-bottom:6px}.zmawhmcs input[type=text],.zmawhmcs input[type=password],.zmawhmcs select{width:100%;max-width:100%;min-height:34px}.zmawhmcs-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.zmawhmcs-full{width:100%}.zmawhmcs-table{width:100%;border-collapse:collapse;margin-bottom:18px}.zmawhmcs-table th,.zmawhmcs-table td{border:1px solid #d9dee3;padding:8px;text-align:left}.zmawhmcs-actions{display:flex;flex-wrap:wrap;gap:8px}.zmawhmcs-inline-form{display:inline-block;margin:0}.zmawhmcs-notice{padding:12px 16px;border-radius:4px;margin:0 0 18px}.zmawhmcs-notice-success{background:#e9f7ef;border-left:4px solid #1f8a4c}.zmawhmcs-notice-error{background:#fff0f0;border-left:4px solid #b42318}.zmawhmcs-log{border-top:1px solid #e5e7eb;padding:10px 0}.zmawhmcs-log-error strong{color:#b42318}.zmawhmcs-log pre{white-space:pre-wrap;background:#f7f7f7;padding:8px;margin:8px 0 0;max-height:110px;overflow:auto}@media(max-width:1100px){.zmawhmcs-grid{grid-template-columns:1fr}.zmawhmcs-form-grid,.zmawhmcs-checks{grid-template-columns:1fr}}';
 }

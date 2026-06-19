@@ -84,6 +84,10 @@ final class OptionsRepository {
 	}
 
 	public function clearTokens(): void {
+		if (!$this->tableExists(self::TOKENS_TABLE)) {
+			return;
+		}
+
 		Capsule::table(self::TOKENS_TABLE)->truncate();
 	}
 
@@ -119,6 +123,10 @@ final class OptionsRepository {
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function logs(): array {
+		if (!$this->tableExists(self::LOGS_TABLE)) {
+			return [];
+		}
+
 		return Capsule::table(self::LOGS_TABLE)->orderBy('id', 'desc')->limit(self::MAX_LOGS)->get()->map(static function ($row): array {
 			return (array) $row;
 		})->all();
@@ -128,6 +136,10 @@ final class OptionsRepository {
 	 * @param array<string,mixed> $context
 	 */
 	public function log(string $level, string $message, array $context = []): void {
+		if (!$this->tableExists(self::LOGS_TABLE)) {
+			return;
+		}
+
 		Capsule::table(self::LOGS_TABLE)->insert([
 			'level' => $this->sanitizeText($level),
 			'message' => $this->sanitizeText($message),
@@ -142,6 +154,10 @@ final class OptionsRepository {
 	}
 
 	public function clearLogs(): void {
+		if (!$this->tableExists(self::LOGS_TABLE)) {
+			return;
+		}
+
 		Capsule::table(self::LOGS_TABLE)->truncate();
 	}
 
@@ -183,6 +199,10 @@ final class OptionsRepository {
 	 * @return array<string,string>
 	 */
 	private function readKeyValueTable(string $table): array {
+		if (!$this->tableExists($table)) {
+			return [];
+		}
+
 		$rows = Capsule::table($table)->get();
 		$values = [];
 		foreach ($rows as $row) {
@@ -196,6 +216,10 @@ final class OptionsRepository {
 	 * @param array<string,mixed> $values
 	 */
 	private function writeKeyValueTable(string $table, array $values): void {
+		if (!$this->tableExists($table)) {
+			return;
+		}
+
 		foreach ($values as $setting => $value) {
 			Capsule::table($table)->updateOrInsert(
 				['setting' => (string) $setting],
@@ -310,5 +334,13 @@ final class OptionsRepository {
 
 	private function sanitizeText(string $value): string {
 		return trim(strip_tags($value));
+	}
+
+	private function tableExists(string $table): bool {
+		try {
+			return Capsule::schema()->hasTable($table);
+		} catch (\Throwable $exception) {
+			return false;
+		}
 	}
 }

@@ -85,6 +85,7 @@ assert_same('https://accounts.zoho.eu', $eu['accounts_url'], 'EU Zoho accounts U
 $options_source = file_get_contents(__DIR__ . '/../lib/OptionsRepository.php');
 assert_true(false !== strpos($options_source, 'encryptSecret') && false !== strpos($options_source, 'zmawhmcs:v1:'), 'Secrets should be encrypted at rest when possible.');
 assert_true(false !== strpos($options_source, 'MAX_LOGS') && false !== strpos($options_source, 'redact'), 'Logs should be capped and redacted.');
+assert_true(false !== strpos($options_source, 'tableExists'), 'Options repository should not fatal if WHMCS loads hooks before module tables exist.');
 
 $oauth_source = file_get_contents(__DIR__ . '/../lib/OAuthService.php');
 assert_true(false !== strpos($oauth_source, 'isAllowedAccountsUrl'), 'OAuth accounts server should be restricted to known Zoho DC hosts.');
@@ -96,5 +97,11 @@ assert_true(false === strpos($api_source, "'response' => " . '$raw'), 'API logs 
 $hooks_source = file_get_contents(__DIR__ . '/../hooks.php');
 assert_true(false !== strpos($hooks_source, "add_hook('ClientAdd'"), 'ClientAdd hook should be registered.');
 assert_true(false !== strpos($hooks_source, "add_hook('ContactAdd'"), 'ContactAdd hook should be registered.');
+
+$module_source = file_get_contents(__DIR__ . '/../zoho_marketing_automation.php');
+assert_true(false !== strpos($module_source, "function zmawhmcs_action_form"), 'Admin state-changing actions should use POST forms.');
+assert_true(false !== strpos($module_source, "'POST' !=="), 'Admin state-changing actions should reject non-POST requests.');
+assert_true(false !== strpos($module_source, 'function_exists(\'generate_token\') && hash_equals'), 'Admin token validation should fail closed if WHMCS token helper is unavailable.');
+assert_true(false === strpos($module_source, 'function zmawhmcs_action_url'), 'Admin state-changing actions should not be GET links with tokens in URLs.');
 
 echo "All WHMCS module tests passed." . PHP_EOL;

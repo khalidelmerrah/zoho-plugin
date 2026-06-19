@@ -44,6 +44,30 @@ assert_same('client_add', $record['source'], 'Sync source should be included.');
 assert_true(isset(FieldMapper::whmcsFieldLabels()['last_products_bought']), 'Order product fields should be available for Zoho mapping.');
 assert_true(isset(FieldMapper::whmcsFieldLabels()['total_paid']), 'Lifetime spend should be available for Zoho mapping.');
 
+$prepared = FieldMapper::preparedMappings([], [
+	['key' => 'Lead Email', 'name' => 'Lead Email', 'type' => 'Email'],
+	['key' => 'First Name', 'name' => 'First Name', 'type' => 'Text'],
+	['key' => 'Last Name', 'name' => 'Last Name', 'type' => 'Text'],
+	['key' => 'Company Name', 'name' => 'Company Name', 'type' => 'Text'],
+	['key' => 'Phone number', 'name' => 'Phone number', 'type' => 'Text'],
+	['key' => 'Lead Source', 'name' => 'Lead Source', 'type' => 'Picklist'],
+	['key' => 'Total Paid', 'name' => 'Total Paid', 'type' => 'Currency'],
+]);
+$prepared_lookup = FieldMapper::mappingLookup($prepared);
+assert_same('Lead Email', $prepared_lookup['email'], 'Email should auto-match to Zoho Lead Email.');
+assert_same('First Name', $prepared_lookup['firstname'], 'First name should auto-match to Zoho First Name.');
+assert_same('Phone number', $prepared_lookup['phonenumber'], 'Phone should auto-match to Zoho Phone number.');
+assert_same('Lead Source', $prepared_lookup['source'], 'Source should auto-match to Zoho Lead Source.');
+assert_same('Total Paid', $prepared_lookup['total_paid'], 'Lifetime spend should auto-match to a close Zoho field.');
+
+$prepared_override = FieldMapper::preparedMappings([
+	['whmcs_field' => 'email', 'zoho_field' => 'Custom Email'],
+], [
+	['key' => 'Lead Email', 'name' => 'Lead Email', 'type' => 'Email'],
+]);
+$override_lookup = FieldMapper::mappingLookup($prepared_override);
+assert_same('Custom Email', $override_lookup['email'], 'Saved mapping choices should override auto-match suggestions.');
+
 $payload = FieldMapper::buildSubscribePayload('list-key', [
 	['whmcs_field' => 'email', 'zoho_field' => 'Lead Email'],
 	['whmcs_field' => 'firstname', 'zoho_field' => 'First Name'],
@@ -127,7 +151,9 @@ assert_true(false !== strpos($module_source, "'POST' !=="), 'Admin state-changin
 assert_true(false !== strpos($module_source, 'function_exists(\'generate_token\') && hash_equals'), 'Admin token validation should fail closed if WHMCS token helper is unavailable.');
 assert_true(false === strpos($module_source, 'function zmawhmcs_action_url'), 'Admin state-changing actions should not be GET links with tokens in URLs.');
 assert_true(false !== strpos($module_source, "sync_order_paid"), 'Admin settings should expose paid order sync toggle.');
-assert_true(false !== strpos($module_source, "max(22"), 'Mapping table should have enough rows for order intelligence fields.');
+assert_true(false !== strpos($module_source, 'WHMCS fields are fixed'), 'Mapping table should explain that WHMCS fields are static.');
+assert_true(false !== strpos($module_source, 'type="hidden" name="mappings['), 'Mapping table should submit fixed WHMCS keys with hidden inputs.');
+assert_true(false === strpos($module_source, "zmawhmcs_mapping_select('mappings[' . \$i . '][whmcs_field]'"), 'WHMCS source fields should not be editable dropdowns.');
 
 $bootstrap_source = file_get_contents(__DIR__ . '/../lib/Bootstrap.php');
 assert_true(false !== strpos($bootstrap_source, 'OrderDataProvider.php'), 'Order data provider should be loaded by module bootstrap.');

@@ -239,6 +239,7 @@ final class OptionsRepository {
 	 */
 	private function sanitizeMappings(array $mappings): array {
 		$clean = [];
+		$allowed = FieldMapper::whmcsFieldLabels();
 		foreach ($mappings as $mapping) {
 			if (!is_array($mapping)) {
 				continue;
@@ -246,7 +247,7 @@ final class OptionsRepository {
 
 			$whmcs_field = $this->sanitizeKey((string) ($mapping['whmcs_field'] ?? ''));
 			$zoho_field = $this->sanitizeText((string) ($mapping['zoho_field'] ?? ''));
-			if ('' === $whmcs_field || '' === $zoho_field) {
+			if (!isset($allowed[$whmcs_field]) || '' === $zoho_field) {
 				continue;
 			}
 

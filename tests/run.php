@@ -204,5 +204,37 @@ assert_true(
 	false !== strpos($options_source, "'tags' => []"),
 	'Metadata cache should include tags.'
 );
+assert_true(
+	false !== strpos($options_source, 'encryptSecret') && false !== strpos($options_source, 'decryptSecret') && false !== strpos($options_source, 'zema:v1:'),
+	'OAuth client secrets and tokens should be encrypted when stored in WordPress options.'
+);
+
+$oauth_source = file_get_contents(__DIR__ . '/../includes/Services/OAuthService.php');
+assert_true(
+	false !== strpos($oauth_source, 'isAllowedAccountsUrl'),
+	'OAuth callbacks and token refreshes should only use known Zoho accounts servers.'
+);
+assert_true(
+	false === strpos($oauth_source, "'response' =>"),
+	'OAuth logs should not store raw token endpoint response bodies.'
+);
+
+$api_client_source = file_get_contents(__DIR__ . '/../includes/Services/ApiClient.php');
+assert_true(
+	false === strpos($api_client_source, "'response' => " . '$body_string'),
+	'API logs should not store raw Zoho response bodies.'
+);
+
+$logger_source = file_get_contents(__DIR__ . '/../includes/Services/Logger.php');
+assert_true(
+	false !== strpos($logger_source, 'MAX_CONTEXT_LENGTH') && false !== strpos($logger_source, 'normalizeValue'),
+	'Logger should redact and cap context values before storing them.'
+);
+
+$uninstall_source = file_get_contents(__DIR__ . '/../uninstall.php');
+assert_true(
+	false !== strpos($uninstall_source, 'is_multisite') && false !== strpos($uninstall_source, 'zema_delete_plugin_options'),
+	'Uninstall cleanup should support single-site and multisite WordPress installs.'
+);
 
 echo "All tests passed." . PHP_EOL;

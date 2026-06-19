@@ -58,6 +58,10 @@ final class OAuthService {
 		$settings = $this->options->getSettings();
 		$dc = $this->options->getDataCenter();
 		$accounts_url = $accounts_server ? esc_url_raw($accounts_server) : $dc['accounts_url'];
+		if (!$this->isAllowedAccountsUrl($accounts_url)) {
+			$this->logger->error('Zoho OAuth callback used an unexpected accounts server.', ['accounts_server' => $accounts_url]);
+			return new \WP_Error('zema_invalid_accounts_server', __('Zoho returned an unexpected accounts server.', 'zoho-elementor-marketing-automation'));
+		}
 
 		$response = wp_remote_post(trailingslashit($accounts_url) . 'oauth/v2/token', [
 			'timeout' => 30,
@@ -77,7 +81,7 @@ final class OAuthService {
 
 		$body = json_decode((string) wp_remote_retrieve_body($response), true);
 		if (!is_array($body) || empty($body['access_token'])) {
-			$this->logger->error('Zoho OAuth token exchange returned an invalid response.', ['response' => wp_remote_retrieve_body($response)]);
+			$this->logger->error('Zoho OAuth token exchange returned an invalid response.', ['status' => (string) wp_remote_retrieve_response_code($response)]);
 			return new \WP_Error('zema_oauth_exchange_failed', __('Zoho did not return an access token.', 'zoho-elementor-marketing-automation'));
 		}
 
@@ -118,6 +122,10 @@ final class OAuthService {
 		$settings = $this->options->getSettings();
 		$dc = $this->options->getDataCenter();
 		$accounts_url = (string) ($tokens['accounts_url'] ?? $dc['accounts_url']);
+		if (!$this->isAllowedAccountsUrl($accounts_url)) {
+			$this->logger->error('Zoho OAuth refresh used an unexpected accounts server.', ['accounts_server' => $accounts_url]);
+			return new \WP_Error('zema_invalid_accounts_server', __('Zoho returned an unexpected accounts server.', 'zoho-elementor-marketing-automation'));
+		}
 
 		$response = wp_remote_post(trailingslashit($accounts_url) . 'oauth/v2/token', [
 			'timeout' => 30,
@@ -136,7 +144,7 @@ final class OAuthService {
 
 		$body = json_decode((string) wp_remote_retrieve_body($response), true);
 		if (!is_array($body) || empty($body['access_token'])) {
-			$this->logger->error('Zoho OAuth refresh returned an invalid response.', ['response' => wp_remote_retrieve_body($response)]);
+			$this->logger->error('Zoho OAuth refresh returned an invalid response.', ['status' => (string) wp_remote_retrieve_response_code($response)]);
 			return new \WP_Error('zema_oauth_refresh_failed', __('Zoho did not refresh the access token.', 'zoho-elementor-marketing-automation'));
 		}
 
@@ -148,5 +156,20 @@ final class OAuthService {
 		$this->options->updateTokens($tokens);
 
 		return (string) $tokens['access_token'];
+	}
+
+	private function isAllowedAccountsUrl(string $url): bool {
+		$host = wp_parse_url($url, PHP_URL_HOST);
+		if (!is_string($host) || '' === $host) {
+			return false;
+		}
+
+		foreach (\ZohoElementorMarketingAutomation\Support\DataCenters::all() as $data_center) {
+			if ($host === wp_parse_url($data_center['accounts_url'], PHP_URL_HOST)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

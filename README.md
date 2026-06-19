@@ -75,6 +75,16 @@ ZohoMarketingAutomation.lead.ALL
 
 Zoho API failures are logged in the settings page and do not block the visitor-facing Elementor success response. Enable **Debug Logging** temporarily if you want to log every submission attempt and success while testing.
 
+## Production Notes
+
+- Use HTTPS for live sites.
+- Each WordPress site needs a redirect URI that exactly matches the URI shown in that site's plugin settings page.
+- If you use one Zoho OAuth client for several WordPress installs, add every site's redirect URI in Zoho API Console. If Zoho does not allow that for your account, create one OAuth client per site.
+- Turn **Debug Logging** off after testing. Error logs are still capped, but successful submission logs are only useful while diagnosing setup.
+- Refresh lists, fields, and tags after connecting each site because Zoho metadata is cached per WordPress install.
+- The plugin stores OAuth secrets and tokens in WordPress options with encryption when OpenSSL is available. Keep WordPress salts stable in `wp-config.php`; changing salts can prevent encrypted values from being decrypted.
+- On multisite, configure and connect Zoho separately for each site where Elementor forms should send leads.
+
 ## Development
 
 Run the dependency-free helper test suite:

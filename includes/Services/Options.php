@@ -23,7 +23,10 @@ final class Options {
 			'debug_logging' => '0',
 		];
 
-		return array_merge($defaults, is_array($settings) ? $settings : []);
+		$settings = array_merge($defaults, is_array($settings) ? $settings : []);
+		$settings['client_secret'] = $this->decryptSecret((string) $settings['client_secret']);
+
+		return $settings;
 	}
 
 	/**
@@ -33,7 +36,7 @@ final class Options {
 		update_option(self::SETTINGS_OPTION, [
 			'data_center' => sanitize_key((string) ($settings['data_center'] ?? 'us')),
 			'client_id' => sanitize_text_field((string) ($settings['client_id'] ?? '')),
-			'client_secret' => sanitize_text_field((string) ($settings['client_secret'] ?? '')),
+			'client_secret' => $this->encryptSecret(sanitize_text_field((string) ($settings['client_secret'] ?? ''))),
 			'debug_logging' => !empty($settings['debug_logging']) ? '1' : '0',
 		], false);
 	}
@@ -50,13 +53,29 @@ final class Options {
 	public function getTokens(): array {
 		$tokens = get_option(self::TOKENS_OPTION, []);
 
-		return is_array($tokens) ? $tokens : [];
+		if (!is_array($tokens)) {
+			return [];
+		}
+
+		foreach (['access_token', 'refresh_token'] as $token_key) {
+			if (!empty($tokens[$token_key])) {
+				$tokens[$token_key] = $this->decryptSecret((string) $tokens[$token_key]);
+			}
+		}
+
+		return $tokens;
 	}
 
 	/**
 	 * @param array<string,mixed> $tokens
 	 */
 	public function updateTokens(array $tokens): void {
+		foreach (['access_token', 'refresh_token'] as $token_key) {
+			if (!empty($tokens[$token_key])) {
+				$tokens[$token_key] = $this->encryptSecret(sanitize_text_field((string) $tokens[$token_key]));
+			}
+		}
+
 		update_option(self::TOKENS_OPTION, $tokens, false);
 	}
 
@@ -114,5 +133,65 @@ final class Options {
 		$tokens = $this->getTokens();
 
 		return !empty($tokens['refresh_token']) || !empty($tokens['access_token']);
+	}
+
+	private function encryptSecret(string $value): string {
+		if ('' === $value || 0 === strpos($value, 'zema:v1:')) {
+			return $value;
+		}
+
+		if (!function_exists('openssl_encrypt')) {
+			return $value;
+		}
+
+		$key = $this->getCryptoKey();
+		$iv = random_bytes(16);
+		$ciphertext = openssl_encrypt($value, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+		if (false === $ciphertext) {
+			return $value;
+		}
+
+		return 'zema:v1:' . base64_encode($iv . $ciphertext);
+	}
+
+	private function decryptSecret(string $value): string {
+		if (0 !== strpos($value, 'zema:v1:')) {
+			return $value;
+		}
+
+		if (!function_exists('openssl_decrypt')) {
+			return '';
+		}
+
+		$encoded = substr($value, strlen('zema:v1:'));
+		$decoded = base64_decode($encoded, true);
+		if (false === $decoded || strlen($decoded) <= 16) {
+			return '';
+		}
+
+		$iv = substr($decoded, 0, 16);
+		$ciphertext = substr($decoded, 16);
+		$plaintext = openssl_decrypt($ciphertext, 'aes-256-cbc', $this->getCryptoKey(), OPENSSL_RAW_DATA, $iv);
+
+		return false === $plaintext ? '' : $plaintext;
+	}
+
+	private function getCryptoKey(): string {
+		$material = '';
+		foreach (['AUTH_KEY', 'SECURE_AUTH_KEY', 'LOGGED_IN_KEY', 'NONCE_KEY'] as $constant) {
+			if (defined($constant)) {
+				$material .= constant($constant);
+			}
+		}
+
+		if ('' === $material && function_exists('wp_salt')) {
+			$material = wp_salt('auth');
+		}
+
+		if ('' === $material) {
+			$material = __FILE__;
+		}
+
+		return hash('sha256', $material, true);
 	}
 }

@@ -6,6 +6,7 @@ namespace ZohoElementorMarketingAutomation\Services;
 final class Logger {
 	private const OPTION = 'zema_logs';
 	private const MAX_ROWS = 50;
+	private const MAX_CONTEXT_LENGTH = 500;
 
 	public function error(string $message, array $context = []): void {
 		$this->write('error', $message, $context);
@@ -49,9 +50,23 @@ final class Logger {
 				continue;
 			}
 
-			$redacted[$key_string] = is_scalar($value) ? sanitize_text_field((string) $value) : wp_json_encode($value);
+			$redacted[$key_string] = $this->normalizeValue($value);
 		}
 
 		return $redacted;
+	}
+
+	private function normalizeValue($value): string {
+		if (is_array($value)) {
+			$value = $this->redact($value);
+		}
+
+		$value_string = is_scalar($value) ? (string) $value : (string) wp_json_encode($value);
+		$value_string = sanitize_text_field($value_string);
+		if (strlen($value_string) > self::MAX_CONTEXT_LENGTH) {
+			$value_string = substr($value_string, 0, self::MAX_CONTEXT_LENGTH) . '...';
+		}
+
+		return $value_string;
 	}
 }

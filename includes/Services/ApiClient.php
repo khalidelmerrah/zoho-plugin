@@ -158,7 +158,7 @@ final class ApiClient {
 		$body = json_decode($body_string, true);
 
 		if ($status < 200 || $status >= 300 || !is_array($body)) {
-			$this->logger->error('Zoho API returned an invalid response.', ['path' => $path, 'status' => $status, 'response' => $body_string]);
+			$this->logger->error('Zoho API returned an invalid response.', ['path' => $path, 'status' => $status]);
 			return new \WP_Error('zema_api_invalid_response', __('Zoho returned an invalid API response.', 'zoho-elementor-marketing-automation'));
 		}
 

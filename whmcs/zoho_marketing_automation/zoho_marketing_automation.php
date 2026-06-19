@@ -115,12 +115,7 @@ function zoho_marketing_automation_output($vars): void {
 	echo '<section class="zmawhmcs-panel zmawhmcs-tab-panel" data-zma-panel="tags">';
 	echo '<h3>Tags</h3>';
 	echo '<p class="zmawhmcs-muted">Selected Zoho tags will be attached to synced WHMCS leads when Zoho accepts them.</p>';
-	echo '<select name="tag_names[]" multiple size="5" class="zmawhmcs-full">';
-	foreach ((array) $cache['tags'] as $tag) {
-		$key = (string) ($tag['key'] ?? '');
-		echo '<option value="' . zmawhmcs_h($key) . '" ' . (in_array($key, (array) $settings['tag_names'], true) ? 'selected' : '') . '>' . zmawhmcs_h((string) ($tag['name'] ?? $key)) . '</option>';
-	}
-	echo '</select>';
+	echo zmawhmcs_tag_picker((array) $cache['tags'], (array) $settings['tag_names']);
 	echo '<button type="submit" name="action" value="save_settings" class="btn btn-primary zmawhmcs-save-row">Save Settings</button>';
 	echo '</section>';
 	echo '<section class="zmawhmcs-panel zmawhmcs-tab-panel" data-zma-panel="mapping">';
@@ -279,6 +274,51 @@ function zmawhmcs_mapping_select(string $name, string $value, array $options): s
 	return $html . '</select>';
 }
 
+function zmawhmcs_tag_picker(array $tags, array $selected): string {
+	$tag_labels = [];
+	foreach ($tags as $tag) {
+		$key = (string) ($tag['key'] ?? '');
+		if ('' === $key) {
+			continue;
+		}
+
+		$tag_labels[$key] = (string) ($tag['name'] ?? $key);
+	}
+
+	$selected = array_values(array_unique(array_filter(array_map('strval', $selected))));
+	$html = '<div class="zmawhmcs-tag-picker" data-zma-tag-picker>';
+	$html .= '<div class="zmawhmcs-selected-tags" data-zma-selected-tags>';
+	foreach ($selected as $tag_key) {
+		$label = $tag_labels[$tag_key] ?? $tag_key;
+		$html .= zmawhmcs_tag_chip($tag_key, $label);
+	}
+	$html .= '</div>';
+	if (empty($selected)) {
+		$html .= '<p class="zmawhmcs-tag-empty" data-zma-tag-empty>No tags selected.</p>';
+	} else {
+		$html .= '<p class="zmawhmcs-tag-empty is-hidden" data-zma-tag-empty>No tags selected.</p>';
+	}
+
+	$html .= '<label class="zmawhmcs-tag-search"><span>Find Zoho tags</span><input type="search" data-zma-tag-search placeholder="Search tags"></label>';
+	if (empty($tag_labels)) {
+		$html .= '<p class="zmawhmcs-muted">No cached tags yet. Use Refresh Lists, Fields & Tags in the Connection tab.</p>';
+	} else {
+		$html .= '<div class="zmawhmcs-tag-options" data-zma-tag-options>';
+		foreach ($tag_labels as $key => $label) {
+			$is_selected = in_array($key, $selected, true);
+			$html .= '<button type="button" class="zmawhmcs-tag-option' . ($is_selected ? ' is-selected' : '') . '" data-zma-tag-key="' . zmawhmcs_h($key) . '" data-zma-tag-label="' . zmawhmcs_h($label) . '">' . zmawhmcs_h($label) . '</button>';
+		}
+		$html .= '</div>';
+	}
+	$html .= '</div>';
+
+	return $html;
+}
+
+function zmawhmcs_tag_chip(string $key, string $label): string {
+	return '<span class="zmawhmcs-tag-chip" data-zma-tag-chip="' . zmawhmcs_h($key) . '"><input type="hidden" name="tag_names[]" value="' . zmawhmcs_h($key) . '"><span>' . zmawhmcs_h($label) . '</span><button type="button" aria-label="Remove ' . zmawhmcs_h($label) . '" data-zma-remove-tag>&times;</button></span>';
+}
+
 function zmawhmcs_checkbox(string $name, string $label, string $value): string {
 	return '<label><input type="checkbox" name="' . zmawhmcs_h($name) . '" value="1" ' . ('1' === $value ? 'checked' : '') . '> ' . zmawhmcs_h($label) . '</label>';
 }
@@ -313,9 +353,9 @@ function zmawhmcs_field_options(array $fields): array {
 }
 
 function zmawhmcs_css(): string {
-	return '.zmawhmcs{max-width:1280px}.zmawhmcs-header{background:#123524;color:#fff;padding:28px 32px;border-radius:6px;margin:0 0 20px;display:flex;justify-content:space-between;gap:24px;align-items:center}.zmawhmcs-header p{margin:0 0 8px;text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:700}.zmawhmcs-header h1{margin:0 0 8px;color:#fff}.zmawhmcs-status{border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:14px 18px;font-weight:700}.zmawhmcs-tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #d9dee3;margin:0 0 0}.zmawhmcs-tab{background:#f4f6f8;border:1px solid #d9dee3;border-bottom:0;border-radius:6px 6px 0 0;color:#243142;cursor:pointer;font-weight:700;padding:11px 16px;position:relative;top:1px}.zmawhmcs-tab:hover{background:#fff}.zmawhmcs-tab.is-active{background:#fff;color:#123524;border-color:#cbd5df}.zmawhmcs-tab-panels{background:#fff;border:1px solid #d9dee3;border-top:0;border-radius:0 0 6px 6px;margin-bottom:18px}.zmawhmcs-tab-panel{display:none;border:0;border-radius:0;margin:0}.zmawhmcs-tab-panel.is-active{display:block}.zmawhmcs-panel{background:#fff;border:1px solid #d9dee3;border-radius:6px;padding:24px;margin-bottom:18px}.zmawhmcs-panel h2,.zmawhmcs-panel h3{margin-top:0}.zmawhmcs-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.zmawhmcs-panel-head h2{margin-bottom:6px}.zmawhmcs-connection-pill{background:#eef6f0;border:1px solid #bfdbc8;border-radius:999px;color:#123524;font-weight:700;padding:8px 12px;white-space:nowrap}.zmawhmcs-connection-meta{background:#f8fafb;border:1px solid #e3e8ee;border-radius:6px;margin:18px 0;padding:14px 16px}.zmawhmcs-connection-meta p{margin:0 0 8px}.zmawhmcs-connection-meta p:last-child{margin-bottom:0}.zmawhmcs-muted{color:#56616d}.zmawhmcs-code{display:block;background:#f4f6f8;padding:10px;border-radius:4px;margin:8px 0 20px;white-space:normal;word-break:break-all}.zmawhmcs-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.zmawhmcs label span{display:block;font-weight:700;margin-bottom:6px}.zmawhmcs input[type=text],.zmawhmcs input[type=password],.zmawhmcs select{width:100%;max-width:100%;min-height:34px}.zmawhmcs-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.zmawhmcs-full{width:100%}.zmawhmcs-save-row{margin-top:14px}.zmawhmcs-table{width:100%;border-collapse:collapse;margin-bottom:18px}.zmawhmcs-table th,.zmawhmcs-table td{border:1px solid #d9dee3;padding:8px;text-align:left;vertical-align:middle}.zmawhmcs-table td strong{display:block;color:#1f2937}.zmawhmcs-table td small{display:block;color:#6b7280;margin-top:2px}.zmawhmcs-actions{display:flex;flex-wrap:wrap;gap:8px}.zmawhmcs-inline-form{display:inline-block;margin:0}.zmawhmcs-notice{padding:12px 16px;border-radius:4px;margin:0 0 18px}.zmawhmcs-notice-success{background:#e9f7ef;border-left:4px solid #1f8a4c}.zmawhmcs-notice-error{background:#fff0f0;border-left:4px solid #b42318}.zmawhmcs-log{border-top:1px solid #e5e7eb;padding:10px 0}.zmawhmcs-log-error strong{color:#b42318}.zmawhmcs-log pre{white-space:pre-wrap;background:#f7f7f7;padding:8px;margin:8px 0 0;max-height:110px;overflow:auto}@media(max-width:900px){.zmawhmcs-header,.zmawhmcs-panel-head{display:block}.zmawhmcs-status,.zmawhmcs-connection-pill{display:inline-block;margin-top:14px}.zmawhmcs-form-grid,.zmawhmcs-checks{grid-template-columns:1fr}.zmawhmcs-tab{flex:1 1 auto;text-align:center}}';
+	return '.zmawhmcs{max-width:1280px}.zmawhmcs-header{background:#123524;color:#fff;padding:28px 32px;border-radius:6px;margin:0 0 20px;display:flex;justify-content:space-between;gap:24px;align-items:center}.zmawhmcs-header p{margin:0 0 8px;text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:700}.zmawhmcs-header h1{margin:0 0 8px;color:#fff}.zmawhmcs-status{border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:14px 18px;font-weight:700}.zmawhmcs-tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #d9dee3;margin:0 0 0}.zmawhmcs-tab{background:#f4f6f8;border:1px solid #d9dee3;border-bottom:0;border-radius:6px 6px 0 0;color:#243142;cursor:pointer;font-weight:700;padding:11px 16px;position:relative;top:1px}.zmawhmcs-tab:hover{background:#fff}.zmawhmcs-tab.is-active{background:#fff;color:#123524;border-color:#cbd5df}.zmawhmcs-tab-panels{background:#fff;border:1px solid #d9dee3;border-top:0;border-radius:0 0 6px 6px;margin-bottom:18px}.zmawhmcs-tab-panel{display:none;border:0;border-radius:0;margin:0}.zmawhmcs-tab-panel.is-active{display:block}.zmawhmcs-panel{background:#fff;border:1px solid #d9dee3;border-radius:6px;padding:24px;margin-bottom:18px}.zmawhmcs-panel h2,.zmawhmcs-panel h3{margin-top:0}.zmawhmcs-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.zmawhmcs-panel-head h2{margin-bottom:6px}.zmawhmcs-connection-pill{background:#eef6f0;border:1px solid #bfdbc8;border-radius:999px;color:#123524;font-weight:700;padding:8px 12px;white-space:nowrap}.zmawhmcs-connection-meta{background:#f8fafb;border:1px solid #e3e8ee;border-radius:6px;margin:18px 0;padding:14px 16px}.zmawhmcs-connection-meta p{margin:0 0 8px}.zmawhmcs-connection-meta p:last-child{margin-bottom:0}.zmawhmcs-muted{color:#56616d}.zmawhmcs-code{display:block;background:#f4f6f8;padding:10px;border-radius:4px;margin:8px 0 20px;white-space:normal;word-break:break-all}.zmawhmcs-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.zmawhmcs label span{display:block;font-weight:700;margin-bottom:6px}.zmawhmcs input[type=text],.zmawhmcs input[type=password],.zmawhmcs input[type=search],.zmawhmcs select{width:100%;max-width:100%;min-height:34px}.zmawhmcs-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.zmawhmcs-full{width:100%}.zmawhmcs-save-row{margin-top:14px}.zmawhmcs-tag-picker{border:1px solid #d9dee3;border-radius:6px;background:#fbfcfd;padding:16px}.zmawhmcs-selected-tags{display:flex;flex-wrap:wrap;gap:8px;min-height:38px;align-items:flex-start}.zmawhmcs-tag-chip{display:inline-flex;align-items:center;gap:8px;background:#eef6f0;border:1px solid #bfdbc8;border-radius:999px;color:#123524;font-weight:700;line-height:1;padding:8px 10px}.zmawhmcs-tag-chip button{appearance:none;background:transparent;border:0;color:#123524;cursor:pointer;font-size:18px;font-weight:700;line-height:1;padding:0}.zmawhmcs-tag-empty{color:#6b7280;margin:0 0 12px}.zmawhmcs-tag-empty.is-hidden{display:none}.zmawhmcs-tag-search{display:block;margin:12px 0}.zmawhmcs-tag-options{display:flex;flex-wrap:wrap;gap:8px;max-height:220px;overflow:auto;padding-top:4px}.zmawhmcs-tag-option{background:#fff;border:1px solid #cfd7df;border-radius:999px;color:#243142;cursor:pointer;padding:8px 12px}.zmawhmcs-tag-option:hover{border-color:#7b8794}.zmawhmcs-tag-option.is-selected{background:#123524;border-color:#123524;color:#fff}.zmawhmcs-tag-option.is-hidden{display:none}.zmawhmcs-table{width:100%;border-collapse:collapse;margin-bottom:18px}.zmawhmcs-table th,.zmawhmcs-table td{border:1px solid #d9dee3;padding:8px;text-align:left;vertical-align:middle}.zmawhmcs-table td strong{display:block;color:#1f2937}.zmawhmcs-table td small{display:block;color:#6b7280;margin-top:2px}.zmawhmcs-actions{display:flex;flex-wrap:wrap;gap:8px}.zmawhmcs-inline-form{display:inline-block;margin:0}.zmawhmcs-notice{padding:12px 16px;border-radius:4px;margin:0 0 18px}.zmawhmcs-notice-success{background:#e9f7ef;border-left:4px solid #1f8a4c}.zmawhmcs-notice-error{background:#fff0f0;border-left:4px solid #b42318}.zmawhmcs-log{border-top:1px solid #e5e7eb;padding:10px 0}.zmawhmcs-log-error strong{color:#b42318}.zmawhmcs-log pre{white-space:pre-wrap;background:#f7f7f7;padding:8px;margin:8px 0 0;max-height:110px;overflow:auto}@media(max-width:900px){.zmawhmcs-header,.zmawhmcs-panel-head{display:block}.zmawhmcs-status,.zmawhmcs-connection-pill{display:inline-block;margin-top:14px}.zmawhmcs-form-grid,.zmawhmcs-checks{grid-template-columns:1fr}.zmawhmcs-tab{flex:1 1 auto;text-align:center}}';
 }
 
 function zmawhmcs_js(): string {
-	return "(function(){var root=document.querySelector('.zmawhmcs');if(!root){return;}var tabs=root.querySelectorAll('[data-zma-tab]');var panels=root.querySelectorAll('[data-zma-panel]');function activate(name){tabs.forEach(function(tab){tab.classList.toggle('is-active',tab.getAttribute('data-zma-tab')===name);});panels.forEach(function(panel){panel.classList.toggle('is-active',panel.getAttribute('data-zma-panel')===name);});try{window.localStorage.setItem('zmawhmcs-active-tab',name);}catch(e){}}tabs.forEach(function(tab){tab.addEventListener('click',function(){activate(tab.getAttribute('data-zma-tab'));});});var saved='';try{saved=window.localStorage.getItem('zmawhmcs-active-tab')||'';}catch(e){}if(saved&&root.querySelector('[data-zma-tab=\"'+saved+'\"]')){activate(saved);}})();";
+	return "(function(){var root=document.querySelector('.zmawhmcs');if(!root){return;}var tabs=root.querySelectorAll('[data-zma-tab]');var panels=root.querySelectorAll('[data-zma-panel]');function activate(name){tabs.forEach(function(tab){tab.classList.toggle('is-active',tab.getAttribute('data-zma-tab')===name);});panels.forEach(function(panel){panel.classList.toggle('is-active',panel.getAttribute('data-zma-panel')===name);});try{window.localStorage.setItem('zmawhmcs-active-tab',name);}catch(e){}}tabs.forEach(function(tab){tab.addEventListener('click',function(){activate(tab.getAttribute('data-zma-tab'));});});var saved='';try{saved=window.localStorage.getItem('zmawhmcs-active-tab')||'';}catch(e){}if(saved&&root.querySelector('[data-zma-tab=\"'+saved+'\"]')){activate(saved);}root.querySelectorAll('[data-zma-tag-picker]').forEach(function(picker){var selected=picker.querySelector('[data-zma-selected-tags]');var empty=picker.querySelector('[data-zma-tag-empty]');var search=picker.querySelector('[data-zma-tag-search]');var options=picker.querySelectorAll('[data-zma-tag-key]');function selectedKeys(){var keys={};selected.querySelectorAll('[data-zma-tag-chip]').forEach(function(chip){keys[chip.getAttribute('data-zma-tag-chip')]=true;});return keys;}function refreshEmpty(){empty.classList.toggle('is-hidden',selected.querySelectorAll('[data-zma-tag-chip]').length>0);}function addTag(key,label){if(!key||selectedKeys()[key]){return;}var chip=document.createElement('span');chip.className='zmawhmcs-tag-chip';chip.setAttribute('data-zma-tag-chip',key);chip.innerHTML='<input type=\"hidden\" name=\"tag_names[]\"><span></span><button type=\"button\" data-zma-remove-tag aria-label=\"Remove tag\">&times;</button>';chip.querySelector('input').value=key;chip.querySelector('span').textContent=label;chip.querySelector('button').setAttribute('aria-label','Remove '+label);selected.appendChild(chip);refreshEmpty();}picker.addEventListener('click',function(event){var option=event.target.closest('[data-zma-tag-key]');if(option){addTag(option.getAttribute('data-zma-tag-key'),option.getAttribute('data-zma-tag-label')||option.textContent);option.classList.add('is-selected');return;}var remove=event.target.closest('[data-zma-remove-tag]');if(remove){var chip=remove.closest('[data-zma-tag-chip]');var key=chip.getAttribute('data-zma-tag-chip');chip.remove();options.forEach(function(item){if(item.getAttribute('data-zma-tag-key')===key){item.classList.remove('is-selected');}});refreshEmpty();}});if(search){search.addEventListener('input',function(){var query=search.value.toLowerCase();options.forEach(function(option){var text=(option.getAttribute('data-zma-tag-label')||option.textContent).toLowerCase();option.classList.toggle('is-hidden',query&&text.indexOf(query)===-1);});});}var keys=selectedKeys();options.forEach(function(option){option.classList.toggle('is-selected',!!keys[option.getAttribute('data-zma-tag-key')]);});refreshEmpty();});})();";
 }

@@ -160,6 +160,11 @@ assert_true(false !== strpos($module_source, 'data-zma-tab="mapping"'), 'Field M
 assert_true(false !== strpos($module_source, 'data-zma-panel="logs"'), 'Logs tab panel should be available.');
 assert_true(false !== strpos($module_source, 'name="action" value="save_settings"'), 'Save buttons should submit the save_settings action.');
 assert_true(false !== strpos($module_source, 'window.localStorage.setItem'), 'Tabbed UI should remember the active admin tab.');
+assert_true(false !== strpos($module_source, 'function zmawhmcs_tag_picker'), 'Admin UI should render tags through the chip picker helper.');
+assert_true(false !== strpos($module_source, 'data-zma-tag-picker'), 'Tags UI should expose a JavaScript tag picker container.');
+assert_true(false !== strpos($module_source, 'name="tag_names[]"'), 'Selected tag chips should submit tag_names array values.');
+assert_true(false !== strpos($module_source, 'data-zma-tag-search'), 'Tags UI should include search filtering.');
+assert_true(false === strpos($module_source, '<select name="tag_names[]" multiple'), 'Tags UI should not use the raw multi-select field.');
 
 $bootstrap_source = file_get_contents(__DIR__ . '/../lib/Bootstrap.php');
 assert_true(false !== strpos($bootstrap_source, 'OrderDataProvider.php'), 'Order data provider should be loaded by module bootstrap.');

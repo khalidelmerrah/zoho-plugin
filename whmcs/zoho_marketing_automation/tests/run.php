@@ -3,11 +3,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/DataCenters.php';
 require_once __DIR__ . '/../lib/FieldMapper.php';
+require_once __DIR__ . '/../lib/Module.php';
 require_once __DIR__ . '/../lib/ZohoFieldParser.php';
 require_once __DIR__ . '/../lib/ZohoTagParser.php';
 
 use ZohoMarketingAutomationWhmcs\DataCenters;
 use ZohoMarketingAutomationWhmcs\FieldMapper;
+use ZohoMarketingAutomationWhmcs\Module;
 use ZohoMarketingAutomationWhmcs\ZohoFieldParser;
 use ZohoMarketingAutomationWhmcs\ZohoTagParser;
 
@@ -81,6 +83,15 @@ assert_same('WHMCS', $tags[0]['key'], 'Zoho tags should parse documented nested 
 
 $eu = DataCenters::get('eu');
 assert_same('https://accounts.zoho.eu', $eu['accounts_url'], 'EU Zoho accounts URL should be available.');
+
+$_SERVER['HTTPS'] = 'on';
+$_SERVER['HTTP_HOST'] = 'whmcs-dev.onelab.ma';
+$_SERVER['SCRIPT_NAME'] = '/admin/addonmodules.php';
+assert_same(
+	'https://whmcs-dev.onelab.ma/admin/addonmodules.php?module=zoho_marketing_automation&action=oauth_callback',
+	Module::redirectUri(),
+	'WHMCS OAuth redirect URI should include the active admin addonmodules.php path.'
+);
 
 $options_source = file_get_contents(__DIR__ . '/../lib/OptionsRepository.php');
 assert_true(false !== strpos($options_source, 'encryptSecret') && false !== strpos($options_source, 'zmawhmcs:v1:'), 'Secrets should be encrypted at rest when possible.');

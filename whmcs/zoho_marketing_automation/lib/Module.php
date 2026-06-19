@@ -33,6 +33,31 @@ final class Module {
 	}
 
 	public static function redirectUri(): string {
-		return self::baseUrl() . '/' . self::adminUrl(['action' => 'oauth_callback']);
+		return self::adminScriptUrl() . '?' . http_build_query([
+			'module' => self::NAME,
+			'action' => 'oauth_callback',
+		]);
+	}
+
+	private static function adminScriptUrl(): string {
+		foreach (['SCRIPT_NAME', 'PHP_SELF'] as $server_key) {
+			$script = (string) ($_SERVER[$server_key] ?? '');
+			if ('addonmodules.php' === basename($script)) {
+				return self::requestOrigin() . $script;
+			}
+		}
+
+		return self::baseUrl() . '/admin/addonmodules.php';
+	}
+
+	private static function requestOrigin(): string {
+		$host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+		if ('' === $host) {
+			return self::baseUrl();
+		}
+
+		$scheme = (!empty($_SERVER['HTTPS']) && 'off' !== strtolower((string) $_SERVER['HTTPS'])) ? 'https' : 'http';
+
+		return $scheme . '://' . $host;
 	}
 }

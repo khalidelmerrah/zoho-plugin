@@ -4,33 +4,36 @@
 }
 
 .zema-hero {
-	align-items: stretch;
-	background: linear-gradient(135deg, #0f5132 0%, #146c43 46%, #1f7a8c 100%);
+	align-items: center;
+	background: #fff;
+	border: 1px solid #dcdcde;
 	border-radius: 6px;
-	color: #fff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	color: #17202a;
 	display: flex;
+	gap: 24px;
 	justify-content: space-between;
 	margin: 20px 0;
-	overflow: hidden;
-	padding: 28px 32px;
+	padding: 24px;
 }
 
 .zema-hero h1 {
-	color: #fff;
-	font-size: 30px;
+	color: #17202a;
+	font-size: 28px;
 	font-weight: 650;
 	line-height: 1.15;
 	margin: 0 0 8px;
 }
 
 .zema-hero p {
-	color: rgba(255, 255, 255, 0.84);
+	color: #4f5b66;
 	font-size: 14px;
 	margin: 0;
 	max-width: 680px;
 }
 
 .zema-kicker {
+	color: #146c43 !important;
 	font-size: 11px !important;
 	font-weight: 700;
 	letter-spacing: 0.08em;
@@ -40,23 +43,56 @@
 
 .zema-status-card {
 	align-self: center;
-	background: rgba(255, 255, 255, 0.14);
-	border: 1px solid rgba(255, 255, 255, 0.22);
+	background: #f6f8fa;
+	border: 1px solid #dfe3e7;
 	border-radius: 6px;
 	min-width: 170px;
 	padding: 16px;
 }
 
 .zema-status-card span {
+	color: #5f6b76;
 	display: block;
 	font-size: 12px;
-	opacity: 0.76;
 }
 
 .zema-status-card strong {
+	color: #17202a;
 	display: block;
 	font-size: 20px;
 	margin-top: 4px;
+}
+
+.zema-status-card.is-connected {
+	background: #f1f8f4;
+	border-color: #cfe8d8;
+}
+
+.zema-status-card.is-connected strong {
+	color: #0f5132;
+}
+
+.zema-notices {
+	margin: -8px 0 20px;
+}
+
+.zema-notices .notice {
+	background: #fff;
+	border-left-color: #2271b1;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	color: #1d2327;
+	margin: 0 0 8px;
+	padding: 1px 12px;
+}
+
+.zema-notices .notice p {
+	color: #1d2327;
+	font-weight: 400;
+	margin: 0.5em 0;
+}
+
+.zema-notices .notice-dismiss:before {
+	color: #50575e;
 }
 
 .zema-grid {

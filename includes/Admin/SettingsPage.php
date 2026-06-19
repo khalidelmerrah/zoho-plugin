@@ -167,7 +167,9 @@ final class SettingsPage {
 					</strong>
 				</div>
 			</div>
-			<?php $this->renderMessage($message); ?>
+			<div class="zema-notices">
+				<?php $this->renderMessage($message); ?>
+			</div>
 
 			<div class="zema-grid">
 				<section class="zema-panel zema-panel-main">

@@ -182,7 +182,12 @@ final class SettingsPage {
 				?>
 			</p>
 			<?php if (!empty($tokens['expires_at'])) : ?>
-				<p><?php echo esc_html(sprintf(__('Access token expires at %s.', 'zoho-elementor-marketing-automation'), wp_date('Y-m-d H:i:s', (int) $tokens['expires_at']))); ?></p>
+				<p>
+					<?php echo esc_html(sprintf(__('Access token expires at %s.', 'zoho-elementor-marketing-automation'), wp_date('Y-m-d H:i:s', (int) $tokens['expires_at']))); ?>
+					<?php if (!empty($tokens['refresh_token'])) : ?>
+						<?php echo esc_html__('Refresh token saved; the plugin will renew access automatically.', 'zoho-elementor-marketing-automation'); ?>
+					<?php endif; ?>
+				</p>
 			<?php endif; ?>
 			<p>
 				<a class="button button-primary" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=zema_oauth_connect'), 'zema_oauth_connect')); ?>"><?php echo esc_html__('Connect Zoho', 'zoho-elementor-marketing-automation'); ?></a>

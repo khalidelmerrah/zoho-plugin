@@ -154,6 +154,12 @@ assert_true(false !== strpos($module_source, "sync_order_paid"), 'Admin settings
 assert_true(false !== strpos($module_source, 'WHMCS fields are fixed'), 'Mapping table should explain that WHMCS fields are static.');
 assert_true(false !== strpos($module_source, 'type="hidden" name="mappings['), 'Mapping table should submit fixed WHMCS keys with hidden inputs.');
 assert_true(false === strpos($module_source, "zmawhmcs_mapping_select('mappings[' . \$i . '][whmcs_field]'"), 'WHMCS source fields should not be editable dropdowns.');
+assert_true(false !== strpos($module_source, 'class="zmawhmcs-tabs"'), 'Admin UI should render section tabs.');
+assert_true(false !== strpos($module_source, 'data-zma-tab="connection"'), 'Connection tab should be available.');
+assert_true(false !== strpos($module_source, 'data-zma-tab="mapping"'), 'Field Mapping tab should be available.');
+assert_true(false !== strpos($module_source, 'data-zma-panel="logs"'), 'Logs tab panel should be available.');
+assert_true(false !== strpos($module_source, 'name="action" value="save_settings"'), 'Save buttons should submit the save_settings action.');
+assert_true(false !== strpos($module_source, 'window.localStorage.setItem'), 'Tabbed UI should remember the active admin tab.');
 
 $bootstrap_source = file_get_contents(__DIR__ . '/../lib/Bootstrap.php');
 assert_true(false !== strpos($bootstrap_source, 'OrderDataProvider.php'), 'Order data provider should be loaded by module bootstrap.');

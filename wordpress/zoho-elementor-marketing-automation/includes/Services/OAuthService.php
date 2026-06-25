@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoElementorMarketingAutomation\Services;
 
+if (!defined('ABSPATH')) {
+	exit;
+}
+
 final class OAuthService {
 	private const SCOPES = [
 		'ZohoMarketingAutomation.lead.READ',
@@ -65,6 +69,7 @@ final class OAuthService {
 
 		$response = wp_remote_post(trailingslashit($accounts_url) . 'oauth/v2/token', [
 			'timeout' => 30,
+			'sslverify' => true,
 			'body' => [
 				'grant_type' => 'authorization_code',
 				'client_id' => $settings['client_id'],
@@ -111,7 +116,33 @@ final class OAuthService {
 			return new \WP_Error('zema_missing_refresh_token', __('Zoho is not connected.', 'zoho-elementor-marketing-automation'));
 		}
 
-		return $this->refreshToken($tokens);
+		$lock_key = 'zema_refresh_lock';
+		$lock_acquired = false;
+
+		for ($i = 0; $i < 15; $i++) {
+			if (false === get_transient($lock_key)) {
+				set_transient($lock_key, '1', 15);
+				$lock_acquired = true;
+				break;
+			}
+			usleep(200000);
+			$tokens = $this->options->getTokens();
+			if (!empty($tokens['access_token']) && (int) ($tokens['expires_at'] ?? 0) > time() + 30) {
+				return (string) $tokens['access_token'];
+			}
+		}
+
+		if (!$lock_acquired) {
+			return new \WP_Error('zema_refresh_timeout', __('Token refresh is in progress by another request. Please try again.', 'zoho-elementor-marketing-automation'));
+		}
+
+		try {
+			$result = $this->refreshToken($tokens);
+		} finally {
+			delete_transient($lock_key);
+		}
+
+		return $result;
 	}
 
 	/**
@@ -129,6 +160,7 @@ final class OAuthService {
 
 		$response = wp_remote_post(trailingslashit($accounts_url) . 'oauth/v2/token', [
 			'timeout' => 30,
+			'sslverify' => true,
 			'body' => [
 				'grant_type' => 'refresh_token',
 				'client_id' => $settings['client_id'],
@@ -159,6 +191,11 @@ final class OAuthService {
 	}
 
 	private function isAllowedAccountsUrl(string $url): bool {
+		$scheme = wp_parse_url($url, PHP_URL_SCHEME);
+		if ('https' !== $scheme) {
+			return false;
+		}
+
 		$host = wp_parse_url($url, PHP_URL_HOST);
 		if (!is_string($host) || '' === $host) {
 			return false;

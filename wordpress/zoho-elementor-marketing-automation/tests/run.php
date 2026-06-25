@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+if (php_sapi_name() !== 'cli') {
+	die('CLI only');
+}
+
 require_once __DIR__ . '/../includes/Support/FieldMapper.php';
 require_once __DIR__ . '/../includes/Support/DataCenters.php';
 require_once __DIR__ . '/../includes/Support/ZohoFieldParser.php';

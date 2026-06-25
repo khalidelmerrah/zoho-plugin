@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoElementorMarketingAutomation\Services;
 
+if (!defined('ABSPATH')) {
+	exit;
+}
+
 final class Logger {
 	private const OPTION = 'zema_logs';
 	private const MAX_ROWS = 50;
@@ -49,11 +53,31 @@ final class Logger {
 				$redacted[$key_string] = '[redacted]';
 				continue;
 			}
+			if ('email' === strtolower($key_string) && is_string($value)) {
+				$redacted[$key_string] = $this->maskEmail($value);
+				continue;
+			}
 
 			$redacted[$key_string] = $this->normalizeValue($value);
 		}
 
 		return $redacted;
+	}
+
+	private function maskEmail(string $email): string {
+		$parts = explode('@', $email);
+		if (count($parts) !== 2) {
+			return '[masked]';
+		}
+		$name = $parts[0];
+		$domain = $parts[1];
+		$length = strlen($name);
+		if ($length <= 2) {
+			$masked_name = str_repeat('*', $length);
+		} else {
+			$masked_name = $name[0] . str_repeat('*', $length - 2) . $name[$length - 1];
+		}
+		return $masked_name . '@' . $domain;
 	}
 
 	private function normalizeValue($value): string {

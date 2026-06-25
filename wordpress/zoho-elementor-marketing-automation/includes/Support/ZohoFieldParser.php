@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoElementorMarketingAutomation\Support;
 
+if (!defined('ABSPATH')) {
+	exit;
+}
+
 final class ZohoFieldParser {
 	/**
 	 * @param array<string,mixed> $response

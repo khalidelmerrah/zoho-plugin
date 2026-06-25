@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoMarketingAutomationWhmcs;
 
+if (!defined('WHMCS')) {
+	die('This file cannot be accessed directly');
+}
+
 final class ApiClient {
 	private OptionsRepository $options;
 	private OAuthService $oauth;
@@ -135,6 +139,8 @@ final class ApiClient {
 		curl_setopt_array($ch, [
 			CURLOPT_URL => $url,
 			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_SSL_VERIFYPEER => true,
+			CURLOPT_SSL_VERIFYHOST => 2,
 			CURLOPT_TIMEOUT => 30,
 			CURLOPT_HTTPHEADER => $headers,
 			CURLOPT_CUSTOMREQUEST => strtoupper($method),

@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoElementorMarketingAutomation;
 
+if (!defined('ABSPATH')) {
+	exit;
+}
+
 use ZohoElementorMarketingAutomation\Admin\SettingsPage;
 use ZohoElementorMarketingAutomation\Services\ApiClient;
 use ZohoElementorMarketingAutomation\Services\Logger;

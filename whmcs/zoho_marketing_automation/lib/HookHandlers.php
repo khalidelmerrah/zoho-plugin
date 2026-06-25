@@ -3,6 +3,11 @@ declare(strict_types=1);
 
 namespace ZohoMarketingAutomationWhmcs;
 
+if (!defined('WHMCS')) {
+	die('This file cannot be accessed directly');
+}
+
+use WHMCS\Database\Capsule;
 use InvalidArgumentException;
 
 final class HookHandlers {
@@ -80,6 +85,14 @@ final class HookHandlers {
 	 * @param array<string,mixed> $settings
 	 */
 	private function shouldSync(array $settings, string $event): bool {
+		try {
+			if (!Capsule::table('tbladdonmodules')->where('module', 'zoho_marketing_automation')->exists()) {
+				return false;
+			}
+		} catch (\Throwable $e) {
+			return false;
+		}
+
 		if ('1' !== (string) ($settings['enabled'] ?? '0')) {
 			return false;
 		}

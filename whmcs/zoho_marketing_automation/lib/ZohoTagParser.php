@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoMarketingAutomationWhmcs;
 
+if (!defined('WHMCS')) {
+	die('This file cannot be accessed directly');
+}
+
 final class ZohoTagParser {
 	/**
 	 * @param array<string,mixed> $response

@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoElementorMarketingAutomation\Services;
 
+if (!defined('ABSPATH')) {
+	exit;
+}
+
 use ZohoElementorMarketingAutomation\Support\ZohoFieldParser;
 use ZohoElementorMarketingAutomation\Support\ZohoTagParser;
 
@@ -135,6 +139,7 @@ final class ApiClient {
 		$args = [
 			'method' => $method,
 			'timeout' => 30,
+			'sslverify' => true,
 			'headers' => [
 				'Authorization' => 'Zoho-oauthtoken ' . $token,
 				'Content-Type' => 'application/x-www-form-urlencoded',

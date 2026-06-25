@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoMarketingAutomationWhmcs;
 
+if (!defined('WHMCS')) {
+	die('This file cannot be accessed directly');
+}
+
 final class OAuthService {
 	private const SCOPES = [
 		'ZohoMarketingAutomation.lead.READ',
@@ -104,7 +108,40 @@ final class OAuthService {
 			return ['error' => 'missing_refresh_token', 'message' => 'Zoho is not connected.'];
 		}
 
-		return $this->refreshToken($tokens);
+		$lock_file = sys_get_temp_dir() . '/zmawhmcs_refresh.lock';
+		$fp = fopen($lock_file, 'c');
+		if (!$fp) {
+			return $this->refreshToken($tokens);
+		}
+
+		$lock_acquired = false;
+		for ($i = 0; $i < 15; $i++) {
+			if (flock($fp, LOCK_EX | LOCK_NB)) {
+				$lock_acquired = true;
+				break;
+			}
+			usleep(200000);
+			$tokens = $this->options->getTokens();
+			if (!empty($tokens['access_token']) && (int) ($tokens['expires_at'] ?? 0) > time() + 30) {
+				flock($fp, LOCK_UN);
+				fclose($fp);
+				return (string) $tokens['access_token'];
+			}
+		}
+
+		if (!$lock_acquired) {
+			fclose($fp);
+			return ['error' => 'oauth_refresh_timeout', 'message' => 'Token refresh timeout.'];
+		}
+
+		try {
+			$result = $this->refreshToken($tokens);
+		} finally {
+			flock($fp, LOCK_UN);
+			fclose($fp);
+		}
+
+		return $result;
 	}
 
 	/**
@@ -157,6 +194,8 @@ final class OAuthService {
 		curl_setopt_array($ch, [
 			CURLOPT_POST => true,
 			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_SSL_VERIFYPEER => true,
+			CURLOPT_SSL_VERIFYHOST => 2,
 			CURLOPT_TIMEOUT => 30,
 			CURLOPT_POSTFIELDS => http_build_query($fields),
 			CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
@@ -179,6 +218,11 @@ final class OAuthService {
 	}
 
 	private function isAllowedAccountsUrl(string $url): bool {
+		$scheme = parse_url($url, PHP_URL_SCHEME);
+		if ('https' !== $scheme) {
+			return false;
+		}
+
 		$host = parse_url($url, PHP_URL_HOST);
 		if (!is_string($host) || '' === $host) {
 			return false;

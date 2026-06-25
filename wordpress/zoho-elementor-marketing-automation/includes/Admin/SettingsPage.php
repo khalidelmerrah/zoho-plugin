@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoElementorMarketingAutomation\Admin;
 
+if (!defined('ABSPATH')) {
+	exit;
+}
+
 use ZohoElementorMarketingAutomation\Services\ApiClient;
 use ZohoElementorMarketingAutomation\Services\Logger;
 use ZohoElementorMarketingAutomation\Services\OAuthService;
@@ -73,10 +77,16 @@ final class SettingsPage {
 		$allowed_data_centers = array_keys(DataCenters::all());
 		$data_center = sanitize_key((string) ($settings['data_center'] ?? 'us'));
 
+		$client_secret = sanitize_text_field((string) ($settings['client_secret'] ?? ''));
+		if ('••••••••••••••••' === $client_secret) {
+			$old_settings = $this->options->getSettings();
+			$client_secret = (string) ($old_settings['client_secret'] ?? '');
+		}
+
 		return [
 			'data_center' => in_array($data_center, $allowed_data_centers, true) ? $data_center : 'us',
 			'client_id' => sanitize_text_field((string) ($settings['client_id'] ?? '')),
-			'client_secret' => sanitize_text_field((string) ($settings['client_secret'] ?? '')),
+			'client_secret' => $client_secret,
 			'debug_logging' => !empty($settings['debug_logging']) ? '1' : '0',
 		];
 	}
@@ -98,6 +108,9 @@ final class SettingsPage {
 			wp_die(esc_html__('You are not allowed to connect Zoho.', 'zoho-elementor-marketing-automation'));
 		}
 
+		// No wp_nonce check here — the OAuth state parameter provides equivalent
+		// CSRF protection. Zoho returns the user here via redirect and cannot
+		// carry a WordPress nonce through the external OAuth flow.
 		$state = sanitize_text_field((string) ($_GET['state'] ?? ''));
 		if (!$this->oauth->validateState($state)) {
 			$this->redirectWithMessage('invalid_state');
@@ -196,7 +209,7 @@ final class SettingsPage {
 							</label>
 							<label>
 								<span><?php echo esc_html__('Client Secret', 'zoho-elementor-marketing-automation'); ?></span>
-								<input id="zema_client_secret" type="password" name="<?php echo esc_attr(Options::SETTINGS_OPTION); ?>[client_secret]" value="<?php echo esc_attr($settings['client_secret']); ?>" autocomplete="new-password">
+								<input id="zema_client_secret" type="password" name="<?php echo esc_attr(Options::SETTINGS_OPTION); ?>[client_secret]" value="<?php echo !empty($settings['client_secret']) ? '••••••••••••••••' : ''; ?>" autocomplete="new-password">
 							</label>
 							<div class="zema-field-full">
 								<span><?php echo esc_html__('Authorized Redirect URI', 'zoho-elementor-marketing-automation'); ?></span>

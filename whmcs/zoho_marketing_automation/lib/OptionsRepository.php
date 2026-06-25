@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoMarketingAutomationWhmcs;
 
+if (!defined('WHMCS')) {
+	die('This file cannot be accessed directly');
+}
+
 use WHMCS\Database\Capsule;
 
 final class OptionsRepository {
@@ -29,11 +33,16 @@ final class OptionsRepository {
 	 * @param array<string,mixed> $settings
 	 */
 	public function updateSettings(array $settings): void {
+		$client_secret = $this->sanitizeText((string) ($settings['client_secret'] ?? ''));
+		if ('••••••••••••••••' === $client_secret) {
+			$old_settings = $this->getSettings();
+			$client_secret = (string) ($old_settings['client_secret'] ?? '');
+		}
 		$stored = [
 			'enabled' => empty($settings['enabled']) ? '0' : '1',
 			'data_center' => $this->sanitizeKey((string) ($settings['data_center'] ?? 'us')),
 			'client_id' => $this->sanitizeText((string) ($settings['client_id'] ?? '')),
-			'client_secret' => $this->encryptSecret($this->sanitizeText((string) ($settings['client_secret'] ?? ''))),
+			'client_secret' => $this->encryptSecret($client_secret),
 			'default_list_key' => $this->sanitizeText((string) ($settings['default_list_key'] ?? '')),
 			'debug_logging' => empty($settings['debug_logging']) ? '0' : '1',
 			'oauth_state' => $this->sanitizeText((string) ($settings['oauth_state'] ?? '')),
@@ -182,20 +191,20 @@ final class OptionsRepository {
 	 */
 	private function defaultSettings(): array {
 		return [
-			'enabled' => '1',
+			'enabled' => '0',
 			'data_center' => 'us',
 			'client_id' => '',
 			'client_secret' => '',
 			'default_list_key' => '',
 			'debug_logging' => '0',
 			'oauth_state' => '',
-			'sync_client_add' => '1',
-			'sync_client_edit' => '1',
-			'sync_contact_add' => '1',
-			'sync_contact_edit' => '1',
-			'sync_checkout' => '1',
-			'sync_order_paid' => '1',
-			'sync_invoice_paid' => '1',
+			'sync_client_add' => '0',
+			'sync_client_edit' => '0',
+			'sync_contact_add' => '0',
+			'sync_contact_edit' => '0',
+			'sync_checkout' => '0',
+			'sync_order_paid' => '0',
+			'sync_invoice_paid' => '0',
 			'mappings' => json_encode(FieldMapper::defaultMappings()),
 			'tag_names' => '[]',
 		];
@@ -267,30 +276,55 @@ final class OptionsRepository {
 	}
 
 	private function encryptSecret(string $value): string {
-		if ('' === $value || 0 === strpos($value, 'zmawhmcs:v1:') || !function_exists('openssl_encrypt')) {
+		if ('' === $value || 0 === strpos($value, 'zmawhmcs:v2:')) {
 			return $value;
 		}
 
-		$iv = random_bytes(16);
-		$ciphertext = openssl_encrypt($value, 'aes-256-cbc', $this->cryptoKey(), OPENSSL_RAW_DATA, $iv);
+		if (!function_exists('openssl_encrypt')) {
+			throw new \RuntimeException('OpenSSL is required for secure credential storage.');
+		}
+
+		if (0 === strpos($value, 'zmawhmcs:v1:')) {
+			$value = $this->decryptSecret($value);
+		}
+
+		$iv = random_bytes(12);
+		$key = $this->cryptoKey();
+		$tag = '';
+		$ciphertext = openssl_encrypt($value, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
 		if (false === $ciphertext) {
 			return $value;
 		}
 
-		return 'zmawhmcs:v1:' . base64_encode($iv . $ciphertext);
+		return 'zmawhmcs:v2:' . base64_encode($iv . $tag . $ciphertext);
 	}
 
 	private function decryptSecret(string $value): string {
-		if (0 !== strpos($value, 'zmawhmcs:v1:') || !function_exists('openssl_decrypt')) {
+		if (0 === strpos($value, 'zmawhmcs:v1:')) {
+			if (!function_exists('openssl_decrypt')) {
+				return '';
+			}
+			$decoded = base64_decode(substr($value, strlen('zmawhmcs:v1:')), true);
+			if (false === $decoded || strlen($decoded) <= 16) {
+				return '';
+			}
+			$plaintext = openssl_decrypt(substr($decoded, 16), 'aes-256-cbc', $this->cryptoKey(), OPENSSL_RAW_DATA, substr($decoded, 0, 16));
+			return false === $plaintext ? '' : $plaintext;
+		}
+
+		if (0 !== strpos($value, 'zmawhmcs:v2:') || !function_exists('openssl_decrypt')) {
 			return $value;
 		}
 
-		$decoded = base64_decode(substr($value, strlen('zmawhmcs:v1:')), true);
-		if (false === $decoded || strlen($decoded) <= 16) {
+		$decoded = base64_decode(substr($value, strlen('zmawhmcs:v2:')), true);
+		if (false === $decoded || strlen($decoded) <= 28) {
 			return '';
 		}
 
-		$plaintext = openssl_decrypt(substr($decoded, 16), 'aes-256-cbc', $this->cryptoKey(), OPENSSL_RAW_DATA, substr($decoded, 0, 16));
+		$iv = substr($decoded, 0, 12);
+		$tag = substr($decoded, 12, 16);
+		$ciphertext = substr($decoded, 28);
+		$plaintext = openssl_decrypt($ciphertext, 'aes-256-gcm', $this->cryptoKey(), OPENSSL_RAW_DATA, $iv, $tag);
 
 		return false === $plaintext ? '' : $plaintext;
 	}
@@ -303,7 +337,11 @@ final class OptionsRepository {
 			}
 		}
 
-		return hash('sha256', '' === $material ? __FILE__ : $material, true);
+		if ('' === $material) {
+			throw new \RuntimeException('WHMCS encryption key material unavailable.');
+		}
+
+		return hash_pbkdf2('sha256', $material, 'zoho_marketing_automation_whmcs_salt', 10000, 32, true);
 	}
 
 	/**
@@ -316,6 +354,10 @@ final class OptionsRepository {
 			$key_string = (string) $key;
 			if (preg_match('/token|secret|authorization|code/i', $key_string)) {
 				$redacted[$key_string] = '[redacted]';
+				continue;
+			}
+			if ('email' === strtolower($key_string) && is_string($value)) {
+				$redacted[$key_string] = $this->maskEmail($value);
 				continue;
 			}
 
@@ -335,12 +377,28 @@ final class OptionsRepository {
 		return $redacted;
 	}
 
+	private function maskEmail(string $email): string {
+		$parts = explode('@', $email);
+		if (count($parts) !== 2) {
+			return '[masked]';
+		}
+		$name = $parts[0];
+		$domain = $parts[1];
+		$length = strlen($name);
+		if ($length <= 2) {
+			$masked_name = str_repeat('*', $length);
+		} else {
+			$masked_name = $name[0] . str_repeat('*', $length - 2) . $name[$length - 1];
+		}
+		return $masked_name . '@' . $domain;
+	}
+
 	private function sanitizeKey(string $value): string {
 		return preg_replace('/[^a-zA-Z0-9_\\-]/', '', $value) ?? '';
 	}
 
 	private function sanitizeText(string $value): string {
-		return trim(strip_tags($value));
+		return trim($value);
 	}
 
 	private function tableExists(string $table): bool {

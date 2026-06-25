@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoElementorMarketingAutomation\Support;
 
+if (!defined('ABSPATH')) {
+	exit;
+}
+
 use InvalidArgumentException;
 
 final class FieldMapper {

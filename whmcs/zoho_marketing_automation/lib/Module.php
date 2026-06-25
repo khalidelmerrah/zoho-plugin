@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoMarketingAutomationWhmcs;
 
+if (!defined('WHMCS')) {
+	die('This file cannot be accessed directly');
+}
+
 final class Module {
 	public const NAME = 'zoho_marketing_automation';
 	public const DISPLAY_NAME = 'Zoho Marketing Automation';
@@ -18,9 +22,8 @@ final class Module {
 			}
 		}
 
-		if ('' === $system_url && isset($_SERVER['HTTP_HOST'])) {
-			$scheme = (!empty($_SERVER['HTTPS']) && 'off' !== $_SERVER['HTTPS']) ? 'https' : 'http';
-			$system_url = $scheme . '://' . $_SERVER['HTTP_HOST'];
+		if ('' === $system_url) {
+			throw new \RuntimeException('WHMCS SystemURL is not configured.');
 		}
 
 		return rtrim($system_url, '/');
@@ -51,13 +54,24 @@ final class Module {
 	}
 
 	private static function requestOrigin(): string {
-		$host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+		$base_url = self::baseUrl();
+		$parsed = parse_url($base_url);
+		$scheme = $parsed['scheme'] ?? 'http';
+		$host = $parsed['host'] ?? '';
+		$port = isset($parsed['port']) ? ':' . $parsed['port'] : '';
+
 		if ('' === $host) {
-			return self::baseUrl();
+			throw new \RuntimeException('Invalid WHMCS SystemURL configured.');
 		}
 
-		$scheme = (!empty($_SERVER['HTTPS']) && 'off' !== strtolower((string) $_SERVER['HTTPS'])) ? 'https' : 'http';
+		$http_host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+		if ('' !== $http_host) {
+			$http_host_name = explode(':', $http_host)[0];
+			if (strtolower($http_host_name) !== strtolower($host)) {
+				throw new \RuntimeException('Host header mismatch against configured SystemURL.');
+			}
+		}
 
-		return $scheme . '://' . $host;
+		return $scheme . '://' . $host . $port;
 	}
 }

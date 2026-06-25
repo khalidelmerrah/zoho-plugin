@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoMarketingAutomationWhmcs;
 
+if (!defined('WHMCS')) {
+	die('This file cannot be accessed directly');
+}
+
 final class DataCenters {
 	/**
 	 * @return array<string,array{name:string,accounts_url:string,api_base_url:string,console_url:string}>

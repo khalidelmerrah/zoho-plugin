@@ -3,3 +3,5 @@ Thumbs.db
 .superpowers/
 vendor/
 node_modules/
+*.zip
+security_audit_report-33.md

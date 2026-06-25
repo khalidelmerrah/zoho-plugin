@@ -37,7 +37,13 @@ function zoho_marketing_automation_activate(): array {
 
 		return ['status' => 'success', 'description' => 'Zoho Marketing Automation module activated.'];
 	} catch (Throwable $exception) {
-		return ['status' => 'error', 'description' => 'Activation failed: ' . $exception->getMessage()];
+		try {
+			$options = new OptionsRepository();
+			$options->log('error', 'Activation failed.', ['exception' => $exception->getMessage()]);
+		} catch (Throwable $log_exception) {
+			// Ignore logging errors if DB setup fails
+		}
+		return ['status' => 'error', 'description' => 'Activation failed. Check module logs for details.'];
 	}
 }
 
@@ -84,7 +90,7 @@ function zoho_marketing_automation_output($vars): void {
 	echo '<div class="zmawhmcs-form-grid">';
 	echo zmawhmcs_select('data_center', 'Zoho Data Center', (string) $settings['data_center'], zmawhmcs_dc_options());
 	echo zmawhmcs_input('client_id', 'Client ID', (string) $settings['client_id']);
-	echo zmawhmcs_input('client_secret', 'Client Secret', (string) $settings['client_secret'], 'password');
+	echo zmawhmcs_input('client_secret', 'Client Secret', !empty($settings['client_secret']) ? '••••••••••••••••' : '', 'password');
 	echo zmawhmcs_select('default_list_key', 'Default Mailing List', (string) $settings['default_list_key'], zmawhmcs_list_options($cache['lists']));
 	echo '</div>';
 	echo '<div class="zmawhmcs-connection-meta">';
@@ -183,7 +189,9 @@ function zmawhmcs_create_tables(): void {
 }
 
 function zmawhmcs_handle_action(OptionsRepository $options, OAuthService $oauth, ApiClient $api): ?array {
-	$action = (string) ($_REQUEST['action'] ?? '');
+	$action = (string) (('POST' === ($_SERVER['REQUEST_METHOD'] ?? ''))
+		? ($_POST['action'] ?? '')
+		: ($_GET['action'] ?? ''));
 	if ('' === $action) {
 		return null;
 	}

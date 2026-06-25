@@ -29,6 +29,20 @@ require_once ZEMA_PLUGIN_DIR . 'includes/Admin/SettingsPage.php';
 require_once ZEMA_PLUGIN_DIR . 'includes/Plugin.php';
 
 add_action('plugins_loaded', static function (): void {
+	if (version_compare(PHP_VERSION, '7.4', '<')) {
+		add_action('admin_notices', static function (): void {
+			echo '<div class="notice notice-error"><p>' . esc_html__('Zoho Marketing Automation requires PHP 7.4+.', 'zoho-elementor-marketing-automation') . '</p></div>';
+		});
+		return;
+	}
+
+	if (!extension_loaded('openssl')) {
+		add_action('admin_notices', static function (): void {
+			echo '<div class="notice notice-error"><p>' . esc_html__('Zoho Marketing Automation requires the OpenSSL PHP extension for secure credential storage.', 'zoho-elementor-marketing-automation') . '</p></div>';
+		});
+		return;
+	}
+
 	$plugin = new \ZohoElementorMarketingAutomation\Plugin();
 	$plugin->boot();
 });

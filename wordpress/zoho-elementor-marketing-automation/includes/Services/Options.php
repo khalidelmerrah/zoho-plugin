@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace ZohoElementorMarketingAutomation\Services;
 
+if (!defined('ABSPATH')) {
+	exit;
+}
+
 use ZohoElementorMarketingAutomation\Support\DataCenters;
 
 final class Options {
@@ -136,42 +140,59 @@ final class Options {
 	}
 
 	private function encryptSecret(string $value): string {
-		if ('' === $value || 0 === strpos($value, 'zema:v1:')) {
+		if ('' === $value || 0 === strpos($value, 'zema:v2:')) {
 			return $value;
 		}
 
 		if (!function_exists('openssl_encrypt')) {
-			return $value;
+			throw new \RuntimeException('OpenSSL is required for secure credential storage.');
 		}
 
+		if (0 === strpos($value, 'zema:v1:')) {
+			$value = $this->decryptSecret($value);
+		}
+
+		$iv = random_bytes(12);
 		$key = $this->getCryptoKey();
-		$iv = random_bytes(16);
-		$ciphertext = openssl_encrypt($value, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+		$tag = '';
+		$ciphertext = openssl_encrypt($value, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
 		if (false === $ciphertext) {
 			return $value;
 		}
 
-		return 'zema:v1:' . base64_encode($iv . $ciphertext);
+		return 'zema:v2:' . base64_encode($iv . $tag . $ciphertext);
 	}
 
 	private function decryptSecret(string $value): string {
-		if (0 !== strpos($value, 'zema:v1:')) {
+		if (0 === strpos($value, 'zema:v1:')) {
+			if (!function_exists('openssl_decrypt')) {
+				return '';
+			}
+			$encoded = substr($value, strlen('zema:v1:'));
+			$decoded = base64_decode($encoded, true);
+			if (false === $decoded || strlen($decoded) <= 16) {
+				return '';
+			}
+			$iv = substr($decoded, 0, 16);
+			$ciphertext = substr($decoded, 16);
+			$plaintext = openssl_decrypt($ciphertext, 'aes-256-cbc', $this->getCryptoKey(), OPENSSL_RAW_DATA, $iv);
+			return false === $plaintext ? '' : $plaintext;
+		}
+
+		if (0 !== strpos($value, 'zema:v2:') || !function_exists('openssl_decrypt')) {
 			return $value;
 		}
 
-		if (!function_exists('openssl_decrypt')) {
-			return '';
-		}
-
-		$encoded = substr($value, strlen('zema:v1:'));
+		$encoded = substr($value, strlen('zema:v2:'));
 		$decoded = base64_decode($encoded, true);
-		if (false === $decoded || strlen($decoded) <= 16) {
+		if (false === $decoded || strlen($decoded) <= 28) {
 			return '';
 		}
 
-		$iv = substr($decoded, 0, 16);
-		$ciphertext = substr($decoded, 16);
-		$plaintext = openssl_decrypt($ciphertext, 'aes-256-cbc', $this->getCryptoKey(), OPENSSL_RAW_DATA, $iv);
+		$iv = substr($decoded, 0, 12);
+		$tag = substr($decoded, 12, 16);
+		$ciphertext = substr($decoded, 28);
+		$plaintext = openssl_decrypt($ciphertext, 'aes-256-gcm', $this->getCryptoKey(), OPENSSL_RAW_DATA, $iv, $tag);
 
 		return false === $plaintext ? '' : $plaintext;
 	}
@@ -189,7 +210,10 @@ final class Options {
 		}
 
 		if ('' === $material) {
-			$material = __FILE__;
+			throw new \RuntimeException(
+				'WordPress cryptographic salts are not configured. '
+				. 'Please define AUTH_KEY in wp-config.php.'
+			);
 		}
 
 		return hash('sha256', $material, true);

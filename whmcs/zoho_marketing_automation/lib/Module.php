@@ -10,7 +10,7 @@ if (!defined('WHMCS')) {
 final class Module {
 	public const NAME = 'zoho_marketing_automation';
 	public const DISPLAY_NAME = 'Zoho Marketing Automation';
-	public const VERSION = '0.1.0';
+	public const VERSION = '1.0.0';
 
 	public static function baseUrl(): string {
 		$system_url = '';

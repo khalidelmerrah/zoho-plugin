@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Zoho Marketing Automation for Elementor Forms
  * Description: Sends Elementor Pro form submissions directly to Zoho Marketing Automation lists.
- * Version: 0.1.0
+ * Version: 1.0.0
  * Author: Khalid El Merrah
  * Text Domain: zoho-elementor-marketing-automation
  * Requires at least: 6.5
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 
 define('ZEMA_PLUGIN_FILE', __FILE__);
 define('ZEMA_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('ZEMA_PLUGIN_VERSION', '0.1.0');
+define('ZEMA_PLUGIN_VERSION', '1.0.0');
 
 require_once ZEMA_PLUGIN_DIR . 'includes/Support/DataCenters.php';
 require_once ZEMA_PLUGIN_DIR . 'includes/Support/FieldMapper.php';

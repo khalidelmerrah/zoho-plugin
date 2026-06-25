@@ -39,7 +39,7 @@ final class Plugin {
 		}
 
 		echo '<div class="notice notice-warning"><p>';
-		echo esc_html__('Zoho Marketing Automation for Elementor Forms requires Elementor Pro Forms to register its submit action.', 'zoho-elementor-marketing-automation');
+		echo esc_html__('Zoho Marketing Automation for Elementor Forms requires Elementor Pro Forms to register its submit action.', 'zoho-marketing-automation-for-elementor-forms');
 		echo '</p></div>';
 	}
 

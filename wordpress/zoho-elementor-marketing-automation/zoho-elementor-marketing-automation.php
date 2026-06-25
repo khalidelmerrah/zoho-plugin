@@ -4,7 +4,7 @@
  * Description: Sends Elementor Pro form submissions directly to Zoho Marketing Automation lists.
  * Version: 1.0.0
  * Author: Khalid El Merrah
- * Text Domain: zoho-elementor-marketing-automation
+ * Text Domain: zoho-marketing-automation-for-elementor-forms
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * License: GPLv2 or later
@@ -33,14 +33,14 @@ require_once ZEMA_PLUGIN_DIR . 'includes/Plugin.php';
 add_action('plugins_loaded', static function (): void {
 	if (version_compare(PHP_VERSION, '7.4', '<')) {
 		add_action('admin_notices', static function (): void {
-			echo '<div class="notice notice-error"><p>' . esc_html__('Zoho Marketing Automation requires PHP 7.4+.', 'zoho-elementor-marketing-automation') . '</p></div>';
+			echo '<div class="notice notice-error"><p>' . esc_html__('Zoho Marketing Automation requires PHP 7.4+.', 'zoho-marketing-automation-for-elementor-forms') . '</p></div>';
 		});
 		return;
 	}
 
 	if (!extension_loaded('openssl')) {
 		add_action('admin_notices', static function (): void {
-			echo '<div class="notice notice-error"><p>' . esc_html__('Zoho Marketing Automation requires the OpenSSL PHP extension for secure credential storage.', 'zoho-elementor-marketing-automation') . '</p></div>';
+			echo '<div class="notice notice-error"><p>' . esc_html__('Zoho Marketing Automation requires the OpenSSL PHP extension for secure credential storage.', 'zoho-marketing-automation-for-elementor-forms') . '</p></div>';
 		});
 		return;
 	}

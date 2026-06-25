@@ -52,8 +52,8 @@ final class SettingsPage {
 
 	public function addMenuPage(): void {
 		add_options_page(
-			__('Zoho Marketing Automation', 'zoho-elementor-marketing-automation'),
-			__('Zoho Marketing Automation', 'zoho-elementor-marketing-automation'),
+			__('Zoho Marketing Automation', 'zoho-marketing-automation-for-elementor-forms'),
+			__('Zoho Marketing Automation', 'zoho-marketing-automation-for-elementor-forms'),
 			'manage_options',
 			'zema-settings',
 			[$this, 'render']
@@ -105,7 +105,7 @@ final class SettingsPage {
 
 	public function callback(): void {
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('You are not allowed to connect Zoho.', 'zoho-elementor-marketing-automation'));
+			wp_die(esc_html__('You are not allowed to connect Zoho.', 'zoho-marketing-automation-for-elementor-forms'));
 		}
 
 		// No wp_nonce check here — the OAuth state parameter provides equivalent
@@ -169,14 +169,14 @@ final class SettingsPage {
 		<div class="wrap zema-admin">
 			<div class="zema-hero">
 				<div>
-					<p class="zema-kicker"><?php echo esc_html__('Elementor Forms Integration', 'zoho-elementor-marketing-automation'); ?></p>
-					<h1><?php echo esc_html__('Zoho Marketing Automation', 'zoho-elementor-marketing-automation'); ?></h1>
-					<p><?php echo esc_html__('Connect once, map each Elementor form, and send leads directly to Zoho lists with optional tags.', 'zoho-elementor-marketing-automation'); ?></p>
+					<p class="zema-kicker"><?php echo esc_html__('Elementor Forms Integration', 'zoho-marketing-automation-for-elementor-forms'); ?></p>
+					<h1><?php echo esc_html__('Zoho Marketing Automation', 'zoho-marketing-automation-for-elementor-forms'); ?></h1>
+					<p><?php echo esc_html__('Connect once, map each Elementor form, and send leads directly to Zoho lists with optional tags.', 'zoho-marketing-automation-for-elementor-forms'); ?></p>
 				</div>
 				<div class="zema-status-card <?php echo $this->options->isConnected() ? 'is-connected' : 'is-disconnected'; ?>">
-					<span><?php echo esc_html__('Connection', 'zoho-elementor-marketing-automation'); ?></span>
+					<span><?php echo esc_html__('Connection', 'zoho-marketing-automation-for-elementor-forms'); ?></span>
 					<strong>
-						<?php echo $this->options->isConnected() ? esc_html__('Connected', 'zoho-elementor-marketing-automation') : esc_html__('Not connected', 'zoho-elementor-marketing-automation'); ?>
+						<?php echo $this->options->isConnected() ? esc_html__('Connected', 'zoho-marketing-automation-for-elementor-forms') : esc_html__('Not connected', 'zoho-marketing-automation-for-elementor-forms'); ?>
 					</strong>
 				</div>
 			</div>
@@ -187,14 +187,14 @@ final class SettingsPage {
 			<div class="zema-grid">
 				<section class="zema-panel zema-panel-main">
 					<div class="zema-panel-heading">
-						<h2><?php echo esc_html__('Credentials', 'zoho-elementor-marketing-automation'); ?></h2>
-						<p><?php echo esc_html__('Use the server-based app credentials from Zoho API Console.', 'zoho-elementor-marketing-automation'); ?></p>
+						<h2><?php echo esc_html__('Credentials', 'zoho-marketing-automation-for-elementor-forms'); ?></h2>
+						<p><?php echo esc_html__('Use the server-based app credentials from Zoho API Console.', 'zoho-marketing-automation-for-elementor-forms'); ?></p>
 					</div>
 					<form method="post" action="options.php">
 						<?php settings_fields('zema_settings'); ?>
 						<div class="zema-form-grid">
 							<label>
-								<span><?php echo esc_html__('Zoho Data Center', 'zoho-elementor-marketing-automation'); ?></span>
+								<span><?php echo esc_html__('Zoho Data Center', 'zoho-marketing-automation-for-elementor-forms'); ?></span>
 								<select id="zema_data_center" name="<?php echo esc_attr(Options::SETTINGS_OPTION); ?>[data_center]">
 									<?php foreach (DataCenters::all() as $key => $data_center) : ?>
 										<option value="<?php echo esc_attr($key); ?>" <?php selected($settings['data_center'], $key); ?>>
@@ -204,73 +204,73 @@ final class SettingsPage {
 								</select>
 							</label>
 							<label>
-								<span><?php echo esc_html__('Client ID', 'zoho-elementor-marketing-automation'); ?></span>
+								<span><?php echo esc_html__('Client ID', 'zoho-marketing-automation-for-elementor-forms'); ?></span>
 								<input id="zema_client_id" type="text" name="<?php echo esc_attr(Options::SETTINGS_OPTION); ?>[client_id]" value="<?php echo esc_attr($settings['client_id']); ?>">
 							</label>
 							<label>
-								<span><?php echo esc_html__('Client Secret', 'zoho-elementor-marketing-automation'); ?></span>
+								<span><?php echo esc_html__('Client Secret', 'zoho-marketing-automation-for-elementor-forms'); ?></span>
 								<input id="zema_client_secret" type="password" name="<?php echo esc_attr(Options::SETTINGS_OPTION); ?>[client_secret]" value="<?php echo !empty($settings['client_secret']) ? '••••••••••••••••' : ''; ?>" autocomplete="new-password">
 							</label>
 							<div class="zema-field-full">
-								<span><?php echo esc_html__('Authorized Redirect URI', 'zoho-elementor-marketing-automation'); ?></span>
+								<span><?php echo esc_html__('Authorized Redirect URI', 'zoho-marketing-automation-for-elementor-forms'); ?></span>
 								<code><?php echo esc_html($this->options->getRedirectUri()); ?></code>
 							</div>
 							<label class="zema-toggle zema-field-full">
 								<input type="checkbox" name="<?php echo esc_attr(Options::SETTINGS_OPTION); ?>[debug_logging]" value="1" <?php checked($settings['debug_logging'], '1'); ?>>
 								<span>
-									<strong><?php echo esc_html__('Debug logging', 'zoho-elementor-marketing-automation'); ?></strong>
-									<em><?php echo esc_html__('Log every Zoho form submission attempt and success while testing.', 'zoho-elementor-marketing-automation'); ?></em>
+									<strong><?php echo esc_html__('Debug logging', 'zoho-marketing-automation-for-elementor-forms'); ?></strong>
+									<em><?php echo esc_html__('Log every Zoho form submission attempt and success while testing.', 'zoho-marketing-automation-for-elementor-forms'); ?></em>
 								</span>
 							</label>
 						</div>
-						<?php submit_button(__('Save Settings', 'zoho-elementor-marketing-automation'), 'primary', 'submit', false); ?>
+						<?php submit_button(__('Save Settings', 'zoho-marketing-automation-for-elementor-forms'), 'primary', 'submit', false); ?>
 					</form>
 				</section>
 
 				<aside class="zema-panel">
 					<div class="zema-panel-heading">
-						<h2><?php echo esc_html__('Connection', 'zoho-elementor-marketing-automation'); ?></h2>
-						<p><?php echo $this->options->isConnected() ? esc_html__('Connected to Zoho.', 'zoho-elementor-marketing-automation') : esc_html__('Not connected.', 'zoho-elementor-marketing-automation'); ?></p>
+						<h2><?php echo esc_html__('Connection', 'zoho-marketing-automation-for-elementor-forms'); ?></h2>
+						<p><?php echo $this->options->isConnected() ? esc_html__('Connected to Zoho.', 'zoho-marketing-automation-for-elementor-forms') : esc_html__('Not connected.', 'zoho-marketing-automation-for-elementor-forms'); ?></p>
 					</div>
 					<?php if (!empty($tokens['expires_at'])) : ?>
 						<p class="zema-token-note">
-							<?php echo esc_html(sprintf(__('Access token expires at %s.', 'zoho-elementor-marketing-automation'), wp_date('Y-m-d H:i:s', (int) $tokens['expires_at']))); ?>
+							<?php echo esc_html(sprintf(__('Access token expires at %s.', 'zoho-marketing-automation-for-elementor-forms'), wp_date('Y-m-d H:i:s', (int) $tokens['expires_at']))); ?>
 							<?php if (!empty($tokens['refresh_token'])) : ?>
-								<?php echo esc_html__('Refresh token saved; the plugin will renew access automatically.', 'zoho-elementor-marketing-automation'); ?>
+								<?php echo esc_html__('Refresh token saved; the plugin will renew access automatically.', 'zoho-marketing-automation-for-elementor-forms'); ?>
 							<?php endif; ?>
 						</p>
 					<?php endif; ?>
 					<div class="zema-actions">
-						<a class="button button-primary" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=zema_oauth_connect'), 'zema_oauth_connect')); ?>"><?php echo esc_html__('Connect Zoho', 'zoho-elementor-marketing-automation'); ?></a>
-						<a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=zema_refresh_metadata'), 'zema_refresh_metadata')); ?>"><?php echo esc_html__('Refresh Lists, Fields & Tags', 'zoho-elementor-marketing-automation'); ?></a>
-						<a class="button button-link-delete" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=zema_oauth_disconnect'), 'zema_oauth_disconnect')); ?>"><?php echo esc_html__('Disconnect', 'zoho-elementor-marketing-automation'); ?></a>
+						<a class="button button-primary" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=zema_oauth_connect'), 'zema_oauth_connect')); ?>"><?php echo esc_html__('Connect Zoho', 'zoho-marketing-automation-for-elementor-forms'); ?></a>
+						<a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=zema_refresh_metadata'), 'zema_refresh_metadata')); ?>"><?php echo esc_html__('Refresh Lists, Fields & Tags', 'zoho-marketing-automation-for-elementor-forms'); ?></a>
+						<a class="button button-link-delete" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=zema_oauth_disconnect'), 'zema_oauth_disconnect')); ?>"><?php echo esc_html__('Disconnect', 'zoho-marketing-automation-for-elementor-forms'); ?></a>
 					</div>
 				</aside>
 			</div>
 
 			<section class="zema-panel zema-metadata">
 				<div class="zema-panel-heading">
-					<h2><?php echo esc_html__('Cached Zoho Metadata', 'zoho-elementor-marketing-automation'); ?></h2>
-					<p><?php echo esc_html__('These values power the Elementor form action dropdowns.', 'zoho-elementor-marketing-automation'); ?></p>
+					<h2><?php echo esc_html__('Cached Zoho Metadata', 'zoho-marketing-automation-for-elementor-forms'); ?></h2>
+					<p><?php echo esc_html__('These values power the Elementor form action dropdowns.', 'zoho-marketing-automation-for-elementor-forms'); ?></p>
 				</div>
 				<div class="zema-metrics">
-					<div><strong><?php echo esc_html((string) count((array) $cache['lists'])); ?></strong><span><?php echo esc_html__('Lists', 'zoho-elementor-marketing-automation'); ?></span></div>
-					<div><strong><?php echo esc_html((string) count((array) $cache['fields'])); ?></strong><span><?php echo esc_html__('Fields', 'zoho-elementor-marketing-automation'); ?></span></div>
-					<div><strong><?php echo esc_html((string) count((array) $cache['tags'])); ?></strong><span><?php echo esc_html__('Tags', 'zoho-elementor-marketing-automation'); ?></span></div>
-					<div><strong><?php echo esc_html(empty($cache['updated_at']) ? __('Never', 'zoho-elementor-marketing-automation') : wp_date('H:i', (int) $cache['updated_at'])); ?></strong><span><?php echo esc_html__('Last Refresh', 'zoho-elementor-marketing-automation'); ?></span></div>
+					<div><strong><?php echo esc_html((string) count((array) $cache['lists'])); ?></strong><span><?php echo esc_html__('Lists', 'zoho-marketing-automation-for-elementor-forms'); ?></span></div>
+					<div><strong><?php echo esc_html((string) count((array) $cache['fields'])); ?></strong><span><?php echo esc_html__('Fields', 'zoho-marketing-automation-for-elementor-forms'); ?></span></div>
+					<div><strong><?php echo esc_html((string) count((array) $cache['tags'])); ?></strong><span><?php echo esc_html__('Tags', 'zoho-marketing-automation-for-elementor-forms'); ?></span></div>
+					<div><strong><?php echo esc_html(empty($cache['updated_at']) ? __('Never', 'zoho-marketing-automation-for-elementor-forms') : wp_date('H:i', (int) $cache['updated_at'])); ?></strong><span><?php echo esc_html__('Last Refresh', 'zoho-marketing-automation-for-elementor-forms'); ?></span></div>
 				</div>
 			</section>
 
 			<section class="zema-panel">
 				<div class="zema-panel-heading zema-heading-row">
 					<div>
-						<h2><?php echo esc_html__('Recent Logs', 'zoho-elementor-marketing-automation'); ?></h2>
-						<p><?php echo esc_html__('Debug entries are capped and can be disabled after testing.', 'zoho-elementor-marketing-automation'); ?></p>
+						<h2><?php echo esc_html__('Recent Logs', 'zoho-marketing-automation-for-elementor-forms'); ?></h2>
+						<p><?php echo esc_html__('Debug entries are capped and can be disabled after testing.', 'zoho-marketing-automation-for-elementor-forms'); ?></p>
 					</div>
-					<a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=zema_clear_logs'), 'zema_clear_logs')); ?>"><?php echo esc_html__('Clear Logs', 'zoho-elementor-marketing-automation'); ?></a>
+					<a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=zema_clear_logs'), 'zema_clear_logs')); ?>"><?php echo esc_html__('Clear Logs', 'zoho-marketing-automation-for-elementor-forms'); ?></a>
 				</div>
 				<table class="widefat striped zema-log-table">
-					<thead><tr><th><?php echo esc_html__('Time', 'zoho-elementor-marketing-automation'); ?></th><th><?php echo esc_html__('Level', 'zoho-elementor-marketing-automation'); ?></th><th><?php echo esc_html__('Message', 'zoho-elementor-marketing-automation'); ?></th><th><?php echo esc_html__('Context', 'zoho-elementor-marketing-automation'); ?></th></tr></thead>
+					<thead><tr><th><?php echo esc_html__('Time', 'zoho-marketing-automation-for-elementor-forms'); ?></th><th><?php echo esc_html__('Level', 'zoho-marketing-automation-for-elementor-forms'); ?></th><th><?php echo esc_html__('Message', 'zoho-marketing-automation-for-elementor-forms'); ?></th><th><?php echo esc_html__('Context', 'zoho-marketing-automation-for-elementor-forms'); ?></th></tr></thead>
 					<tbody>
 						<?php foreach ($this->logger->all() as $row) : ?>
 							<tr>
@@ -281,7 +281,7 @@ final class SettingsPage {
 							</tr>
 						<?php endforeach; ?>
 						<?php if ([] === $this->logger->all()) : ?>
-							<tr><td colspan="4"><?php echo esc_html__('No logs yet.', 'zoho-elementor-marketing-automation'); ?></td></tr>
+							<tr><td colspan="4"><?php echo esc_html__('No logs yet.', 'zoho-marketing-automation-for-elementor-forms'); ?></td></tr>
 						<?php endif; ?>
 					</tbody>
 				</table>
@@ -292,7 +292,7 @@ final class SettingsPage {
 
 	private function requireManageOptions(string $nonce_action): void {
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('You are not allowed to manage Zoho settings.', 'zoho-elementor-marketing-automation'));
+			wp_die(esc_html__('You are not allowed to manage Zoho settings.', 'zoho-marketing-automation-for-elementor-forms'));
 		}
 
 		check_admin_referer($nonce_action);
@@ -312,16 +312,16 @@ final class SettingsPage {
 		}
 
 		$messages = [
-			'missing_credentials' => __('Save a Zoho Client ID and Client Secret before connecting.', 'zoho-elementor-marketing-automation'),
-			'invalid_state' => __('Zoho OAuth state validation failed. Please try connecting again.', 'zoho-elementor-marketing-automation'),
-			'missing_code' => __('Zoho did not return an authorization code.', 'zoho-elementor-marketing-automation'),
-			'connect_failed' => __('Zoho connection failed. Check the logs below.', 'zoho-elementor-marketing-automation'),
-			'connected_refresh_failed' => __('Zoho connected, but list/field refresh failed. Check the logs below.', 'zoho-elementor-marketing-automation'),
-			'connected' => __('Zoho connected and metadata refreshed.', 'zoho-elementor-marketing-automation'),
-			'disconnected' => __('Zoho disconnected.', 'zoho-elementor-marketing-automation'),
-			'refresh_failed' => __('Metadata refresh failed. Check the logs below.', 'zoho-elementor-marketing-automation'),
-			'refreshed' => __('Zoho lists, fields, and tags refreshed.', 'zoho-elementor-marketing-automation'),
-			'logs_cleared' => __('Logs cleared.', 'zoho-elementor-marketing-automation'),
+			'missing_credentials' => __('Save a Zoho Client ID and Client Secret before connecting.', 'zoho-marketing-automation-for-elementor-forms'),
+			'invalid_state' => __('Zoho OAuth state validation failed. Please try connecting again.', 'zoho-marketing-automation-for-elementor-forms'),
+			'missing_code' => __('Zoho did not return an authorization code.', 'zoho-marketing-automation-for-elementor-forms'),
+			'connect_failed' => __('Zoho connection failed. Check the logs below.', 'zoho-marketing-automation-for-elementor-forms'),
+			'connected_refresh_failed' => __('Zoho connected, but list/field refresh failed. Check the logs below.', 'zoho-marketing-automation-for-elementor-forms'),
+			'connected' => __('Zoho connected and metadata refreshed.', 'zoho-marketing-automation-for-elementor-forms'),
+			'disconnected' => __('Zoho disconnected.', 'zoho-marketing-automation-for-elementor-forms'),
+			'refresh_failed' => __('Metadata refresh failed. Check the logs below.', 'zoho-marketing-automation-for-elementor-forms'),
+			'refreshed' => __('Zoho lists, fields, and tags refreshed.', 'zoho-marketing-automation-for-elementor-forms'),
+			'logs_cleared' => __('Logs cleared.', 'zoho-marketing-automation-for-elementor-forms'),
 		];
 
 		if (!isset($messages[$message])) {

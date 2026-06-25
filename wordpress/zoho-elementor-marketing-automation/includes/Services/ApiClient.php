@@ -164,11 +164,11 @@ final class ApiClient {
 
 		if ($status < 200 || $status >= 300 || !is_array($body)) {
 			$this->logger->error('Zoho API returned an invalid response.', ['path' => $path, 'status' => $status]);
-			return new \WP_Error('zema_api_invalid_response', __('Zoho returned an invalid API response.', 'zoho-elementor-marketing-automation'));
+			return new \WP_Error('zema_api_invalid_response', __('Zoho returned an invalid API response.', 'zoho-marketing-automation-for-elementor-forms'));
 		}
 
 		if (isset($body['code']) && !in_array((string) $body['code'], ['0', '200'], true)) {
-			$message = (string) ($body['message'] ?? $body['error'] ?? __('Zoho API request failed.', 'zoho-elementor-marketing-automation'));
+			$message = (string) ($body['message'] ?? $body['error'] ?? __('Zoho API request failed.', 'zoho-marketing-automation-for-elementor-forms'));
 			$this->logger->error($message, ['path' => $path, 'code' => (string) $body['code']]);
 			return new \WP_Error('zema_api_error', $message, $body);
 		}

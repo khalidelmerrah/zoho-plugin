@@ -33,7 +33,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 	}
 
 	public function get_label(): string {
-		return esc_html__('Zoho Marketing Automation', 'zoho-elementor-marketing-automation');
+		return esc_html__('Zoho Marketing Automation', 'zoho-marketing-automation-for-elementor-forms');
 	}
 
 	/**
@@ -47,7 +47,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 		$widget->start_controls_section(
 			'section_zema',
 			[
-				'label' => esc_html__('Zoho Marketing Automation', 'zoho-elementor-marketing-automation'),
+				'label' => esc_html__('Zoho Marketing Automation', 'zoho-marketing-automation-for-elementor-forms'),
 				'condition' => [
 					'submit_actions' => $this->get_name(),
 				],
@@ -57,22 +57,22 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 		$widget->add_control(
 			'zema_list_key',
 			[
-				'label' => esc_html__('Mailing List', 'zoho-elementor-marketing-automation'),
+				'label' => esc_html__('Mailing List', 'zoho-marketing-automation-for-elementor-forms'),
 				'type' => Controls_Manager::SELECT,
 				'options' => $list_options,
-				'description' => esc_html__('Refresh Zoho lists in WordPress Settings > Zoho Marketing Automation if this is empty.', 'zoho-elementor-marketing-automation'),
+				'description' => esc_html__('Refresh Zoho lists in WordPress Settings > Zoho Marketing Automation if this is empty.', 'zoho-marketing-automation-for-elementor-forms'),
 			]
 		);
 
 		$widget->add_control(
 			'zema_tag_names',
 			[
-				'label' => esc_html__('Tags', 'zoho-elementor-marketing-automation'),
+				'label' => esc_html__('Tags', 'zoho-marketing-automation-for-elementor-forms'),
 				'type' => Controls_Manager::SELECT2,
 				'multiple' => true,
 				'label_block' => true,
 				'options' => $tag_options,
-				'description' => esc_html__('Optional. Refresh Zoho metadata in WordPress settings if tags are missing.', 'zoho-elementor-marketing-automation'),
+				'description' => esc_html__('Optional. Refresh Zoho metadata in WordPress settings if tags are missing.', 'zoho-marketing-automation-for-elementor-forms'),
 				'condition' => [
 					'zema_list_key!' => '',
 				],
@@ -191,7 +191,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 		$repeater->add_control('local_id', ['type' => Controls_Manager::SELECT]);
 
 		$widget->add_control('zema_fields_map_v2', [
-			'label' => esc_html__('Field Mappings', 'zoho-elementor-marketing-automation'),
+			'label' => esc_html__('Field Mappings', 'zoho-marketing-automation-for-elementor-forms'),
 			'type' => Fields_Map::CONTROL_TYPE,
 			'separator' => 'before',
 			'fields' => $repeater->get_controls(),
@@ -207,7 +207,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 	 * @return array<string,string>
 	 */
 	private function formatOptions(array $items): array {
-		$options = ['' => esc_html__('Select...', 'zoho-elementor-marketing-automation')];
+		$options = ['' => esc_html__('Select...', 'zoho-marketing-automation-for-elementor-forms')];
 
 		foreach ($items as $item) {
 			if (!is_array($item)) {
@@ -261,7 +261,7 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 		if (!$has_email) {
 			array_unshift($defaults, [
 				'remote_id' => 'Lead Email',
-				'remote_label' => esc_html__('Lead Email', 'zoho-elementor-marketing-automation'),
+				'remote_label' => esc_html__('Lead Email', 'zoho-marketing-automation-for-elementor-forms'),
 				'remote_type' => 'email',
 				'remote_required' => true,
 			]);
@@ -270,12 +270,12 @@ final class ZohoMarketingAutomationAction extends Integration_Base {
 		if (1 === count($defaults)) {
 			$defaults[] = [
 				'remote_id' => 'First Name',
-				'remote_label' => esc_html__('First Name', 'zoho-elementor-marketing-automation'),
+				'remote_label' => esc_html__('First Name', 'zoho-marketing-automation-for-elementor-forms'),
 				'remote_type' => 'text',
 			];
 			$defaults[] = [
 				'remote_id' => 'Last Name',
-				'remote_label' => esc_html__('Last Name', 'zoho-elementor-marketing-automation'),
+				'remote_label' => esc_html__('Last Name', 'zoho-marketing-automation-for-elementor-forms'),
 				'remote_type' => 'text',
 			];
 		}

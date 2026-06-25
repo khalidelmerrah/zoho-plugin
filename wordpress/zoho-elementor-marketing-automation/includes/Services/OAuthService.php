@@ -64,7 +64,7 @@ final class OAuthService {
 		$accounts_url = $accounts_server ? esc_url_raw($accounts_server) : $dc['accounts_url'];
 		if (!$this->isAllowedAccountsUrl($accounts_url)) {
 			$this->logger->error('Zoho OAuth callback used an unexpected accounts server.', ['accounts_server' => $accounts_url]);
-			return new \WP_Error('zema_invalid_accounts_server', __('Zoho returned an unexpected accounts server.', 'zoho-elementor-marketing-automation'));
+			return new \WP_Error('zema_invalid_accounts_server', __('Zoho returned an unexpected accounts server.', 'zoho-marketing-automation-for-elementor-forms'));
 		}
 
 		$response = wp_remote_post(trailingslashit($accounts_url) . 'oauth/v2/token', [
@@ -87,7 +87,7 @@ final class OAuthService {
 		$body = json_decode((string) wp_remote_retrieve_body($response), true);
 		if (!is_array($body) || empty($body['access_token'])) {
 			$this->logger->error('Zoho OAuth token exchange returned an invalid response.', ['status' => (string) wp_remote_retrieve_response_code($response)]);
-			return new \WP_Error('zema_oauth_exchange_failed', __('Zoho did not return an access token.', 'zoho-elementor-marketing-automation'));
+			return new \WP_Error('zema_oauth_exchange_failed', __('Zoho did not return an access token.', 'zoho-marketing-automation-for-elementor-forms'));
 		}
 
 		$this->options->updateTokens([
@@ -113,7 +113,7 @@ final class OAuthService {
 		}
 
 		if (empty($tokens['refresh_token'])) {
-			return new \WP_Error('zema_missing_refresh_token', __('Zoho is not connected.', 'zoho-elementor-marketing-automation'));
+			return new \WP_Error('zema_missing_refresh_token', __('Zoho is not connected.', 'zoho-marketing-automation-for-elementor-forms'));
 		}
 
 		$lock_key = 'zema_refresh_lock';
@@ -133,7 +133,7 @@ final class OAuthService {
 		}
 
 		if (!$lock_acquired) {
-			return new \WP_Error('zema_refresh_timeout', __('Token refresh is in progress by another request. Please try again.', 'zoho-elementor-marketing-automation'));
+			return new \WP_Error('zema_refresh_timeout', __('Token refresh is in progress by another request. Please try again.', 'zoho-marketing-automation-for-elementor-forms'));
 		}
 
 		try {
@@ -155,7 +155,7 @@ final class OAuthService {
 		$accounts_url = (string) ($tokens['accounts_url'] ?? $dc['accounts_url']);
 		if (!$this->isAllowedAccountsUrl($accounts_url)) {
 			$this->logger->error('Zoho OAuth refresh used an unexpected accounts server.', ['accounts_server' => $accounts_url]);
-			return new \WP_Error('zema_invalid_accounts_server', __('Zoho returned an unexpected accounts server.', 'zoho-elementor-marketing-automation'));
+			return new \WP_Error('zema_invalid_accounts_server', __('Zoho returned an unexpected accounts server.', 'zoho-marketing-automation-for-elementor-forms'));
 		}
 
 		$response = wp_remote_post(trailingslashit($accounts_url) . 'oauth/v2/token', [
@@ -177,7 +177,7 @@ final class OAuthService {
 		$body = json_decode((string) wp_remote_retrieve_body($response), true);
 		if (!is_array($body) || empty($body['access_token'])) {
 			$this->logger->error('Zoho OAuth refresh returned an invalid response.', ['status' => (string) wp_remote_retrieve_response_code($response)]);
-			return new \WP_Error('zema_oauth_refresh_failed', __('Zoho did not refresh the access token.', 'zoho-elementor-marketing-automation'));
+			return new \WP_Error('zema_oauth_refresh_failed', __('Zoho did not refresh the access token.', 'zoho-marketing-automation-for-elementor-forms'));
 		}
 
 		$tokens['access_token'] = sanitize_text_field((string) $body['access_token']);

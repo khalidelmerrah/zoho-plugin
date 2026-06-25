@@ -1,0 +1,45 @@
+name: Build and Release Packaged Modules
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build and Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package WordPress Plugin
+        run: |
+          mkdir -p build/wordpress/zoho-elementor-marketing-automation
+          cp -r wordpress/zoho-elementor-marketing-automation/* build/wordpress/zoho-elementor-marketing-automation/
+          rm -rf build/wordpress/zoho-elementor-marketing-automation/tests
+          cd build/wordpress
+          zip -r ../../wordpress-plugin-zoho-ma-${{ github.ref_name }}.zip zoho-elementor-marketing-automation
+          cd ../..
+
+      - name: Package WHMCS Addon Module
+        run: |
+          mkdir -p build/whmcs/zoho_marketing_automation
+          cp -r whmcs/zoho_marketing_automation/* build/whmcs/zoho_marketing_automation/
+          rm -rf build/whmcs/zoho_marketing_automation/tests
+          cd build/whmcs
+          zip -r ../../whmcs-addon-zoho-ma-${{ github.ref_name }}.zip zoho_marketing_automation
+          cd ../..
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            wordpress-plugin-zoho-ma-${{ github.ref_name }}.zip
+            whmcs-addon-zoho-ma-${{ github.ref_name }}.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

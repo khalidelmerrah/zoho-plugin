@@ -101,7 +101,7 @@ final class SettingsPage {
 
 		$redirect_url = $this->oauth->getAuthorizationUrl($this->oauth->createState());
 		add_filter('allowed_redirect_hosts', static function (array $hosts) use ($redirect_url): array {
-			$host = parse_url($redirect_url, PHP_URL_HOST);
+			$host = wp_parse_url($redirect_url, PHP_URL_HOST);
 			if (is_string($host)) {
 				$hosts[] = $host;
 			}

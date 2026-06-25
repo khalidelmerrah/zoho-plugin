@@ -93,6 +93,11 @@ final class ZohoFieldParser {
 			return sanitize_text_field($value);
 		}
 
+		if (function_exists('wp_strip_all_tags')) {
+			return trim(wp_strip_all_tags($value));
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags
 		return trim(strip_tags($value));
 	}
 }

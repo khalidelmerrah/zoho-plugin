@@ -99,7 +99,16 @@ final class SettingsPage {
 			$this->redirectWithMessage('missing_credentials');
 		}
 
-		wp_redirect($this->oauth->getAuthorizationUrl($this->oauth->createState()));
+		$redirect_url = $this->oauth->getAuthorizationUrl($this->oauth->createState());
+		add_filter('allowed_redirect_hosts', static function (array $hosts) use ($redirect_url): array {
+			$host = parse_url($redirect_url, PHP_URL_HOST);
+			if (is_string($host)) {
+				$hosts[] = $host;
+			}
+			return $hosts;
+		});
+
+		wp_safe_redirect($redirect_url);
 		exit;
 	}
 
@@ -111,13 +120,16 @@ final class SettingsPage {
 		// No wp_nonce check here — the OAuth state parameter provides equivalent
 		// CSRF protection. Zoho returns the user here via redirect and cannot
 		// carry a WordPress nonce through the external OAuth flow.
-		$state = sanitize_text_field((string) ($_GET['state'] ?? ''));
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$state = sanitize_text_field(wp_unslash((string) ($_GET['state'] ?? '')));
 		if (!$this->oauth->validateState($state)) {
 			$this->redirectWithMessage('invalid_state');
 		}
 
-		$code = sanitize_text_field((string) ($_GET['code'] ?? ''));
-		$accounts_server = esc_url_raw((string) ($_GET['accounts-server'] ?? ''));
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$code = sanitize_text_field(wp_unslash((string) ($_GET['code'] ?? '')));
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$accounts_server = esc_url_raw(wp_unslash((string) ($_GET['accounts-server'] ?? '')));
 		if ('' === $code) {
 			$this->redirectWithMessage('missing_code');
 		}
@@ -164,7 +176,8 @@ final class SettingsPage {
 		$settings = $this->options->getSettings();
 		$tokens = $this->options->getTokens();
 		$cache = $this->options->getCache();
-		$message = sanitize_key((string) ($_GET['zema_message'] ?? ''));
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$message = sanitize_key(wp_unslash((string) ($_GET['zema_message'] ?? '')));
 		?>
 		<div class="wrap zema-admin">
 			<div class="zema-hero">
@@ -234,7 +247,13 @@ final class SettingsPage {
 					</div>
 					<?php if (!empty($tokens['expires_at'])) : ?>
 						<p class="zema-token-note">
-							<?php echo esc_html(sprintf(__('Access token expires at %s.', 'zoho-marketing-automation-for-elementor-forms'), wp_date('Y-m-d H:i:s', (int) $tokens['expires_at']))); ?>
+							<?php
+							echo esc_html(sprintf(
+								/* translators: %s: Expiration date and time */
+								__('Access token expires at %s.', 'zoho-marketing-automation-for-elementor-forms'),
+								wp_date('Y-m-d H:i:s', (int) $tokens['expires_at'])
+							));
+							?>
 							<?php if (!empty($tokens['refresh_token'])) : ?>
 								<?php echo esc_html__('Refresh token saved; the plugin will renew access automatically.', 'zoho-marketing-automation-for-elementor-forms'); ?>
 							<?php endif; ?>
